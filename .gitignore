@@ -1,5 +1,5 @@
-# Data directories
-data/
+# Data directories (top-level only, not kgcnn_torch/data/)
+/data/
 
 # Large dataset file
 MatPES-PBE-2025.1.json
