@@ -1,0 +1,32 @@
+{
+  "models": [
+    {"name": "GCNModel", "script": "scripts/align_gcn_model.py", "status": "implemented"},
+    {"name": "SchNetModel", "script": "scripts/align_schnet_model.py", "status": "implemented"},
+    {"name": "GATModel", "script": "scripts/align_gat_model.py", "status": "implemented"},
+    {"name": "GINModel", "script": "scripts/align_gin_model.py", "status": "implemented"},
+    {"name": "AttentiveFPModel", "script": "scripts/align_attentivefp_model.py", "status": "implemented"},
+    {"name": "GATv2Model", "script": "scripts/align_gatv2_model.py", "status": "implemented"},
+    {"name": "GraphSAGEModel", "script": "scripts/align_graphsage_model.py", "status": "implemented"},
+    {"name": "GNNFilmModel", "script": "scripts/align_gnnfilm_model.py", "status": "implemented"},
+    {"name": "RGCNModel", "script": "scripts/align_rgcn_model.py", "status": "implemented"},
+    {"name": "rGINModel", "script": "scripts/align_rgin_model.py", "status": "implemented"},
+    {"name": "CGCNNModel", "script": "scripts/align_cgcnn_model.py", "status": "implemented"},
+    {"name": "MoGATModel", "script": "scripts/align_mogat_model.py", "status": "implemented"},
+    {"name": "INorpModel", "script": "scripts/align_inorp_model.py", "status": "implemented"},
+    {"name": "MEGNetModel", "script": "scripts/align_megnet_model.py", "status": "implemented"},
+    {"name": "EGNNModel", "script": "scripts/align_egnn_model.py", "status": "implemented"},
+    {"name": "DMPNNModel", "script": "scripts/align_dmpnn_model.py", "status": "implemented"},
+    {"name": "CMPNNModel", "script": "scripts/align_cmpnn_model.py", "status": "implemented"},
+    {"name": "DGINModel", "script": "scripts/align_dgin_model.py", "status": "implemented"},
+    {"name": "NMPNModel", "script": "scripts/align_nmpn_model.py", "status": "implemented"},
+    {"name": "DimeNetPPModel", "script": "scripts/align_dimenetpp_model.py", "status": "implemented"},
+    {"name": "PAiNNModel", "script": "scripts/align_painn_model.py", "status": "implemented"},
+    {"name": "HamNetModel", "script": "scripts/align_hamnet_model.py", "status": "implemented"},
+    {"name": "MEGANModel", "script": "scripts/align_megan_model.py", "status": "implemented"},
+    {"name": "MATModel", "script": "scripts/align_mat_model.py", "status": "implemented"},
+    {"name": "MXMNetModel", "script": "scripts/align_mxmnet_model.py", "status": "implemented"},
+    {"name": "HDNNP2ndModel", "script": "scripts/align_hdnnp2nd_model.py", "status": "implemented"},
+    {"name": "HDNNP2ndBehlerModel", "script": "scripts/align_hdnnp2nd_behler_model.py", "status": "implemented"},
+    {"name": "HDNNP2ndAtomWiseModel", "script": "scripts/align_hdnnp2nd_atomwise_model.py", "status": "implemented"}
+  ]
+}

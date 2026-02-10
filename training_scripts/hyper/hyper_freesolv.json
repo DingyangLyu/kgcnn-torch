@@ -1,0 +1,190 @@
+{
+  "SchNet": {
+    "model": {
+      "config": {
+        "model_name": "SchNet",
+        "num_features": 128,
+        "num_filters": 128,
+        "num_interactions": 4,
+        "cutoff": 4.0,
+        "num_gaussians": 20,
+        "readout": "sum",
+        "output_dim": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 800,
+        "batch_size": 32,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-4}},
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 50,
+        "factor": 0.5,
+        "min_lr": 1e-6
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "FreeSolv",
+        "config": {"root": "data/"}
+      },
+      "data_unit": "kcal/mol"
+    }
+  },
+  "GIN": {
+    "model": {
+      "config": {
+        "model_name": "GIN",
+        "node_dim": 64,
+        "depth": 5,
+        "units": 64,
+        "dropout": 0.05,
+        "use_edge_features": false,
+        "node_pooling": "sum",
+        "output_units": [64, 32],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 300,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 25,
+        "factor": 0.5,
+        "min_lr": 1e-6
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "FreeSolv",
+        "config": {"root": "data/"}
+      },
+      "data_unit": "kcal/mol"
+    }
+  },
+  "GAT": {
+    "model": {
+      "config": {
+        "model_name": "GAT",
+        "node_dim": 64,
+        "depth": 1,
+        "attention_units": 64,
+        "attention_heads_num": 10,
+        "attention_heads_concat": false,
+        "node_pooling": "sum",
+        "output_units": [64, 32],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 500,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-3}},
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 25,
+        "factor": 0.5,
+        "min_lr": 1e-6
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "FreeSolv",
+        "config": {"root": "data/"}
+      },
+      "data_unit": "kcal/mol"
+    }
+  },
+  "DimeNetPP": {
+    "model": {
+      "config": {
+        "model_name": "DimeNetPP",
+        "emb_size": 128,
+        "out_emb_size": 256,
+        "int_emb_size": 64,
+        "basis_emb_size": 8,
+        "num_blocks": 4,
+        "num_spherical": 7,
+        "num_radial": 6,
+        "cutoff": 5.0,
+        "envelope_exponent": 5,
+        "num_before_skip": 1,
+        "num_after_skip": 2,
+        "num_dense_output": 3,
+        "output_dim": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 872,
+        "batch_size": 10,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearWarmupExponentialDecay",
+        "warmup_steps": 30,
+        "decay_steps": 40000,
+        "decay_rate": 0.01
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "FreeSolv",
+        "config": {"root": "data/"}
+      },
+      "data_unit": "kcal/mol"
+    }
+  }
+}

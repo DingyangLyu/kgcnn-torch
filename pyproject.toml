@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kgcnn-torch"
+version = "0.1.0"
+description = "Graph Neural Networks for molecules and materials science, built on PyTorch and PyG"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+dependencies = [
+    "torch>=2.0",
+    "torch_geometric>=2.4",
+    "numpy>=1.22",
+]
+
+[project.optional-dependencies]
+molecule = ["rdkit"]
+crystal = ["pymatgen"]
+all = ["rdkit", "pymatgen"]
+dev = ["pytest>=7.0", "pytest-cov"]
+
+[tool.setuptools.packages.find]
+include = ["kgcnn_torch*"]

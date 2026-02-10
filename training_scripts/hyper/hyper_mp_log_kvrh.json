@@ -1,0 +1,136 @@
+{
+  "SchNet": {
+    "model": {
+      "config": {
+        "model_name": "SchNet",
+        "num_features": 128,
+        "num_filters": 128,
+        "num_interactions": 4,
+        "cutoff": 5.0,
+        "num_gaussians": 25,
+        "readout": "mean",
+        "output_dim": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 800,
+        "batch_size": 32,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-4}},
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 50,
+        "factor": 0.5,
+        "min_lr": 1e-6
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "MatProjectLogKVRH",
+        "config": {}
+      },
+      "data_unit": "log(GPa)"
+    }
+  },
+  "PAiNN": {
+    "model": {
+      "config": {
+        "model_name": "PAiNN",
+        "num_features": 128,
+        "num_interactions": 3,
+        "cutoff": 5.0,
+        "num_gaussians": 20,
+        "output_dim": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 800,
+        "batch_size": 32,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-4}},
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 50,
+        "factor": 0.5,
+        "min_lr": 1e-6
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "MatProjectLogKVRH",
+        "config": {}
+      },
+      "data_unit": "log(GPa)"
+    }
+  },
+  "CGCNN": {
+    "model": {
+      "config": {
+        "model_name": "CGCNN",
+        "node_features": 64,
+        "edge_features": 64,
+        "depth": 4,
+        "units": 128,
+        "cutoff": 6.0,
+        "num_gaussians": 60,
+        "readout": "mean",
+        "output_dim": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 1000,
+        "batch_size": 128,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 50,
+        "factor": 0.5,
+        "min_lr": 1e-6
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "MatProjectLogKVRH",
+        "config": {}
+      },
+      "data_unit": "log(GPa)"
+    }
+  }
+}

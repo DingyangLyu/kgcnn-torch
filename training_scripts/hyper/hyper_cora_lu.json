@@ -1,0 +1,90 @@
+{
+  "GAT": {
+    "model": {
+      "config": {
+        "model_name": "GAT",
+        "node_dim": 64,
+        "depth": 1,
+        "attention_units": 32,
+        "attention_heads_num": 10,
+        "attention_heads_concat": false,
+        "node_pooling": "mean",
+        "output_units": [64, 32],
+        "num_targets": 7,
+        "output_embedding": "node"
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 250,
+        "batch_size": 1,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "loss": "categorical_crossentropy"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 25,
+        "factor": 0.5,
+        "min_lr": 1e-4
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "CoraLu",
+        "config": {"root": "data/"}
+      },
+      "data_unit": ""
+    }
+  },
+  "GIN": {
+    "model": {
+      "config": {
+        "model_name": "GIN",
+        "node_dim": 64,
+        "depth": 5,
+        "units": 64,
+        "dropout": 0.05,
+        "use_edge_features": false,
+        "node_pooling": "mean",
+        "output_units": [64, 32],
+        "num_targets": 7,
+        "output_embedding": "node"
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 500,
+        "batch_size": 1,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-3}},
+        "loss": "categorical_crossentropy"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 25,
+        "factor": 0.5,
+        "min_lr": 1e-5
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "CoraLu",
+        "config": {"root": "data/"}
+      },
+      "data_unit": ""
+    }
+  }
+}

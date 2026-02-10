@@ -1,0 +1,6 @@
+torch>=2.0
+torch_geometric>=2.4
+numpy>=1.22
+rdkit
+pymatgen
+pytest>=7.0

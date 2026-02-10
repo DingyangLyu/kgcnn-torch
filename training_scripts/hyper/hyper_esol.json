@@ -1,0 +1,185 @@
+{
+  "SchNet": {
+    "model": {
+      "config": {
+        "model_name": "SchNet",
+        "num_features": 128,
+        "num_filters": 128,
+        "num_interactions": 6,
+        "cutoff": 10.0,
+        "num_gaussians": 50,
+        "readout": "sum",
+        "output_dim": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 500,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-4}},
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 25,
+        "factor": 0.5,
+        "min_lr": 1e-6
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {"root": "data/"}
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "GIN": {
+    "model": {
+      "config": {
+        "model_name": "GIN",
+        "node_dim": 64,
+        "depth": 5,
+        "units": 128,
+        "dropout": 0.0,
+        "use_edge_features": false,
+        "node_pooling": "sum",
+        "output_units": [128, 64],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 300,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 25,
+        "factor": 0.5,
+        "min_lr": 1e-6
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {"root": "data/"}
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "GAT": {
+    "model": {
+      "config": {
+        "model_name": "GAT",
+        "node_dim": 64,
+        "depth": 3,
+        "attention_units": 64,
+        "attention_heads_num": 4,
+        "attention_heads_concat": true,
+        "node_pooling": "sum",
+        "output_units": [128, 64],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 300,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 25,
+        "factor": 0.5,
+        "min_lr": 1e-6
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {"root": "data/"}
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "DMPNN": {
+    "model": {
+      "config": {
+        "model_name": "DMPNN",
+        "node_dim": 64,
+        "edge_dim": 14,
+        "depth": 3,
+        "units": 300,
+        "dropout": 0.0,
+        "node_pooling": "sum",
+        "output_units": [300, 150],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 300,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearWarmupExponentialDecay",
+        "warmup_steps": 200,
+        "decay_steps": 40000,
+        "decay_rate": 0.01
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {"root": "data/"}
+      },
+      "data_unit": "log mol/L"
+    }
+  }
+}

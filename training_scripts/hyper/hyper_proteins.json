@@ -1,0 +1,134 @@
+{
+  "GIN": {
+    "model": {
+      "config": {
+        "model_name": "GIN",
+        "node_dim": 64,
+        "depth": 5,
+        "units": 64,
+        "dropout": 0.5,
+        "use_edge_features": false,
+        "node_pooling": "sum",
+        "output_units": [64, 32],
+        "num_targets": 1,
+        "output_activation": "sigmoid"
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 150,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-4}},
+        "loss": "bce_with_logits"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 25,
+        "factor": 0.5,
+        "min_lr": 1e-6
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "PROTEINS",
+        "config": {"root": "data/"}
+      },
+      "data_unit": ""
+    }
+  },
+  "GAT": {
+    "model": {
+      "config": {
+        "model_name": "GAT",
+        "node_dim": 64,
+        "depth": 1,
+        "attention_units": 64,
+        "attention_heads_num": 10,
+        "attention_heads_concat": false,
+        "node_pooling": "sum",
+        "output_units": [64, 32],
+        "num_targets": 1,
+        "output_activation": "sigmoid"
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 500,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-3}},
+        "loss": "bce_with_logits"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 25,
+        "factor": 0.5,
+        "min_lr": 1e-6
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "PROTEINS",
+        "config": {"root": "data/"}
+      },
+      "data_unit": ""
+    }
+  },
+  "DMPNN": {
+    "model": {
+      "config": {
+        "model_name": "DMPNN",
+        "node_dim": 64,
+        "edge_dim": 14,
+        "depth": 5,
+        "units": 128,
+        "dropout": 0.1,
+        "node_pooling": "sum",
+        "output_units": [64, 32],
+        "num_targets": 1,
+        "output_activation": "sigmoid"
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 300,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "loss": "bce_with_logits"
+      },
+      "scheduler": {
+        "class_name": "LinearWarmupExponentialDecay",
+        "warmup_steps": 200,
+        "decay_steps": 40000,
+        "decay_rate": 0.01
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "PROTEINS",
+        "config": {"root": "data/"}
+      },
+      "data_unit": ""
+    }
+  }
+}

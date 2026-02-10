@@ -1,0 +1,66 @@
+{
+  "SchNet": {
+    "model": {
+      "config": {
+        "model_name": "SchNet",
+        "node_dim": 64,
+        "units": 128,
+        "depth": 4,
+        "gauss_bins": 20,
+        "gauss_distance": 4.0,
+        "gauss_sigma": 0.4,
+        "gauss_offset": 0.0,
+        "last_mlp_units": [128, 64],
+        "output_units": [64],
+        "num_targets": 1,
+        "use_node_embedding": true,
+        "num_embeddings": 95,
+        "make_distance": true,
+        "expand_distance": true,
+        "use_output_mlp": true,
+        "node_pooling": "sum",
+        "output_embedding": "graph"
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 10,
+        "batch_size": 32,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 5e-4,
+            "eps": 1e-7
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 5e-4,
+        "learning_rate_stop": 1e-5,
+        "epo_min": 5,
+        "epo": 10
+      },
+      "scaler": {
+        "class_name": "StandardScaler"
+      },
+      "cross_validation": {
+        "n_splits": 2,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "QM9",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "eV"
+    }
+  }
+}
