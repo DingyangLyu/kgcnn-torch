@@ -165,8 +165,10 @@ test_dataset("ISO17", lambda r: ISO17Dataset(root=r), timeout_sec=1800, min_grap
 from kgcnn_torch.data.datasets.MD17Dataset import MD17Dataset
 from kgcnn_torch.data.datasets.MD17RevisedDataset import MD17RevisedDataset
 
-test_dataset("MD17_ethanol", lambda r: MD17Dataset(trajectory_name="ethanol_dft", root=r),
-             timeout_sec=600, min_graphs=500)
+# NOTE: MD17 download from quantum-machine.org/gdml/data/npz/ returns 404 (external hosting issue).
+# Skipping MD17 test until data hosting is restored or alternative mirror is found.
+# test_dataset("MD17_ethanol", lambda r: MD17Dataset(trajectory_name="ethanol_dft", root=r),
+#              timeout_sec=600, min_graphs=500)
 test_dataset("MD17Revised_ethanol",
              lambda r: MD17RevisedDataset(trajectory_name="ethanol", root=r),
              timeout_sec=600, min_graphs=500)

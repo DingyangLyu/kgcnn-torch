@@ -306,7 +306,7 @@ class GNNExplainer:
                     history["total_loss"].append(total_loss.item())
                     history["pred_loss"].append(pred_loss.item())
                     history["reg_loss"].append(reg_loss.item())
-                    history["predictions"].append(y_pred.detach().cpu().numpy())
+                    history["predictions"].append(y_pred.detach().cpu().tolist())
                     opt = self.gnnx_optimizer
                     if opt.edge_mask_loss_weight > 0:
                         el = opt.edge_mask_loss_weight * torch.norm(

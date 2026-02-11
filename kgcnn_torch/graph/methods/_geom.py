@@ -26,7 +26,7 @@ def coulomb_matrix_to_inverse_distance_proton(coulomb_mat: np.ndarray,
     c = coulomb_mat / zz
     c[..., indslie, indslie] = 0
     c /= unit_conversion
-    z = np.array(np.round(z), dtype=np.int)
+    z = np.array(np.round(z), dtype=int)
     return c, z
 
 

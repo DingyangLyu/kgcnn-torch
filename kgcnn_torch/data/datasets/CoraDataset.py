@@ -27,8 +27,13 @@ class CoraDataset(KgcnnGraphDataset):
     file_name = "cora.npz"
 
     def kgcnn_prepare(self, kgcnn_ds):
-        """Load Cora from sparse NPZ file."""
+        """Load Cora from sparse NPZ file.
+
+        Uses fixed 70-column one-hot labels and scaled adjacency edge weights
+        matching Keras version.
+        """
         from scipy import sparse
+        from kgcnn_torch.graph.methods import convert_scaled_adjacency_to_list
 
         file_path = os.path.join(self.raw_dir, "cora.npz")
         data = np.load(file_path, allow_pickle=True)
@@ -42,17 +47,19 @@ class CoraDataset(KgcnnGraphDataset):
             (data["attr_data"], data["attr_indices"], data["attr_indptr"]),
             shape=data["attr_shape"])
 
+        # Labels: fixed 70 columns matching Keras
         labels = data["labels"]
-        node_attributes = np.array(attr.todense(), dtype="float32")
-        node_labels = np.eye(max(labels) + 1, dtype="float32")[labels]
+        labels = np.expand_dims(labels, axis=-1)
+        labels = np.array(labels == np.arange(70), dtype="float")
 
-        # Convert adjacency to edge list
-        adj_coo = adj.tocoo()
-        edge_indices = np.stack([adj_coo.row, adj_coo.col], axis=-1).astype("int")
-        edge_weights = np.array(adj_coo.data, dtype="float32").reshape(-1, 1)
+        node_attributes = np.array(attr.todense(), dtype="float32")
+
+        # Edge indices and weights via scaled adjacency (matching Keras)
+        edi, ed = convert_scaled_adjacency_to_list(adj)
 
         # Single graph dataset
         kgcnn_ds.assign_property("node_attributes", [node_attributes])
-        kgcnn_ds.assign_property("node_labels", [node_labels])
-        kgcnn_ds.assign_property("edge_indices", [edge_indices])
-        kgcnn_ds.assign_property("edge_weights", [edge_weights])
+        kgcnn_ds.assign_property("node_labels", [labels])
+        kgcnn_ds.assign_property("edge_indices", [edi])
+        kgcnn_ds.assign_property("edge_attributes", [np.expand_dims(ed, axis=-1)])
+        kgcnn_ds.assign_property("edge_weights", [np.expand_dims(ed, axis=-1)])

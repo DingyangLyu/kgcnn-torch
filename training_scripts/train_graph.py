@@ -84,9 +84,17 @@ _PARAM_ALIASES = {
         "output_dim": "num_targets",
     },
     "PAiNN": {
+        "num_features": "node_dim",
+        "num_interactions": "depth",
+        "num_gaussians": "num_radial",
         "output_dim": "num_targets",
     },
     "DimeNetPP": {
+        "output_dim": "num_targets",
+    },
+    "EGNN": {
+        "num_features": "node_dim",
+        "num_interactions": "depth",
         "output_dim": "num_targets",
     },
     "GCN": {
@@ -167,9 +175,12 @@ def make_loss(compile_config):
         return nn.L1Loss()
     elif loss_name == "huber":
         return nn.HuberLoss()
-    elif loss_name == "bce":
+    elif loss_name in ("bce", "bce_with_logits", "binary_crossentropy"):
         return nn.BCEWithLogitsLoss()
+    elif loss_name in ("categorical_crossentropy", "cross_entropy"):
+        return nn.CrossEntropyLoss()
     else:
+        logger.warning(f"Unknown loss '{loss_name}', falling back to MSELoss.")
         return nn.MSELoss()
 
 
@@ -548,6 +559,8 @@ def main():
             sched_config = dict(scheduler_config)
             sched_name = sched_config.pop("class_name", None)
             if sched_name:
+                # Pass steps_per_epoch so step-based Keras configs are converted correctly
+                sched_config.setdefault("steps_per_epoch", len(train_loader))
                 scheduler = get_scheduler(sched_name, optimizer, **sched_config)
 
         # Checkpoint path

@@ -19,6 +19,6 @@ class ESOLDataset(MoleculeNetDataset2018):
     label_units = ["log mol/L"]
 
     def __init__(self, root=None, transform=None, pre_transform=None, pre_filter=None,
-                 reload: bool = False):
+                 reload: bool = False, **kwargs):
         super().__init__(molnet_name="ESOL", root=root, transform=transform,
-                         pre_transform=pre_transform, pre_filter=pre_filter, reload=reload)
+                         pre_transform=pre_transform, pre_filter=pre_filter, reload=reload, **kwargs)

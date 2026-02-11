@@ -57,7 +57,7 @@ class MD17Dataset(KgcnnGraphDataset):
 
     def __init__(self, trajectory_name: str = None, root=None,
                  transform=None, pre_transform=None, pre_filter=None,
-                 reload: bool = False):
+                 reload: bool = False, **kwargs):
         if trajectory_name not in self.datasets_download_info:
             raise ValueError(
                 f"Unknown trajectory '{trajectory_name}'. "
@@ -74,7 +74,7 @@ class MD17Dataset(KgcnnGraphDataset):
         self.download_info["data_directory_name"] = "MD17"
         self.file_name = info["download_file_name"]
         super().__init__(root=root, transform=transform, pre_transform=pre_transform,
-                         pre_filter=pre_filter, reload=reload)
+                         pre_filter=pre_filter, reload=reload, **kwargs)
 
     def kgcnn_prepare(self, kgcnn_ds):
         """Load MD17 trajectory from NPZ file."""

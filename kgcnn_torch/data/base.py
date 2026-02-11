@@ -406,8 +406,10 @@ class MemoryGraphList(list):
                 if edge_attr_parts:
                     data_dict['edge_attr'] = torch.cat(edge_attr_parts, dim=-1)
 
-            # Edge weight
+            # Edge weight (check both singular and plural naming)
             edge_weight = g.obtain_property("edge_weight")
+            if edge_weight is None:
+                edge_weight = g.obtain_property("edge_weights")
             if edge_weight is not None:
                 data_dict['edge_weight'] = torch.tensor(np.asarray(edge_weight), dtype=torch.float)
 
@@ -462,7 +464,15 @@ class MemoryGraphList(list):
                 if node_num is not None:
                     node_attr = np.expand_dims(np.asarray(node_num, dtype=np.float32), axis=-1)
             if node_attr is not None:
-                data_dict['x'] = torch.tensor(np.asarray(node_attr), dtype=torch.float)
+                na = np.asarray(node_attr, dtype=np.float32)
+                if na.ndim == 1:
+                    na = np.expand_dims(na, axis=-1)
+                data_dict['x'] = torch.tensor(na, dtype=torch.float)
+
+            # Node labels (for node classification)
+            node_labels = g.obtain_property("node_labels")
+            if node_labels is not None:
+                data_dict['node_labels'] = torch.tensor(np.asarray(node_labels), dtype=torch.float)
 
             # Edge number / edge type
             edge_type = g.obtain_property("edge_number")

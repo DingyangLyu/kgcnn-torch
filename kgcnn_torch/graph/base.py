@@ -25,7 +25,7 @@ class GraphDict(dict):
     when assigning a named value.
 
     Graph operations that modify edges or sort indices can be applied via :obj:`apply_preprocessor` located in
-    :obj:`kgcnn.graph.preprocessor`.
+    :obj:`kgcnn_torch.graph.preprocessor`.
 
     .. code-block:: python
 
@@ -277,10 +277,10 @@ class GraphDict(dict):
         r"""Apply a preprocessor on self.
 
         Args:
-            name: Name of a preprocessor that uses :obj:`kgcnn.graph.serial.get_preprocessor` for backward
+            name: Name of a preprocessor that uses :obj:`kgcnn_torch.graph.serial.get_preprocessor` for backward
                 compatibility, or a proper serialization dictionary or class :obj:`GraphPreProcessorBase`.
             kwargs: Optional kwargs for preprocessor. Only used in connection with
-                :obj:`kgcnn.graph.serial.get_preprocessor` if :obj:`name` is string.
+                :obj:`kgcnn_torch.graph.serial.get_preprocessor` if :obj:`name` is string.
 
         Returns:
             self

@@ -55,6 +55,70 @@ class StandardScaler:
         with open(filepath, 'r') as f:
             self.set_weights(json.load(f))
 
+    def partial_fit(self, X: np.ndarray, y=None, sample_weight=None, **kwargs):
+        """Online computation of mean and std on X for later scaling.
+
+        All of X is processed as a single batch. This is intended for cases
+        when :meth:`fit` is not feasible due to very large number of
+        `n_samples` or because X is read from a continuous stream.
+
+        Uses the parallel algorithm from Chan et al. (1982) for numerically
+        stable incremental mean and variance computation.
+
+        Args:
+            X: Array of shape (n_samples, n_features).
+            y: Ignored (API compatibility).
+            sample_weight: Not used.
+
+        Returns:
+            self: Fitted scaler.
+        """
+        X = np.asarray(X, dtype=np.float64)
+        if X.ndim == 1:
+            X = X[:, None]
+
+        if not self._is_fitted:
+            # First call: initialize from this batch
+            self._n_samples_seen = X.shape[0]
+            self.mean_ = np.mean(X, axis=0)
+            self._var = np.var(X, axis=0)
+            self.scale_ = np.sqrt(self._var)
+            self.scale_[self.scale_ < 1e-7] = 1.0
+            self._is_fitted = True
+            return self
+
+        # Incremental update (Chan et al. 1982, Eq 1.5a,b)
+        new_n = X.shape[0]
+        new_mean = np.mean(X, axis=0)
+        new_var = np.var(X, axis=0)
+
+        old_n = self._n_samples_seen
+        old_mean = self.mean_
+        old_var = self._var
+
+        total_n = old_n + new_n
+        delta = new_mean - old_mean
+
+        self.mean_ = (old_n * old_mean + new_n * new_mean) / total_n
+        self._var = (old_n * (old_var + delta ** 2 * new_n / total_n) +
+                     new_n * new_var) / total_n
+        self._n_samples_seen = total_n
+
+        self.scale_ = np.sqrt(self._var)
+        self.scale_[self.scale_ < 1e-7] = 1.0
+        return self
+
+    def get_scaling(self):
+        """Get scale of shape (1, n_properties).
+
+        Returns:
+            np.ndarray or None: Scale array expanded with leading axis,
+                or None if scaler has not been fitted.
+        """
+        if self.scale_ is None:
+            return None
+        return np.expand_dims(self.scale_, axis=0)
+
     def get_config(self) -> dict:
         return {}
 
@@ -276,6 +340,72 @@ class ExtensiveMolecularScaler:
         """Load scaler weights from JSON."""
         with open(filepath, "r") as f:
             self.set_weights(json.load(f))
+
+    def _predict(self, atomic_number: list) -> np.ndarray:
+        """Predict the offset from atomic numbers. Requires :obj:`fit()` called previously.
+
+        Args:
+            atomic_number: List of arrays of atomic numbers.
+                Example: ``[np.array([7,1,1,1]), ...]``.
+
+        Returns:
+            np.ndarray: Predicted offset of shape ``(n_samples, n_properties)``.
+        """
+        if self._fit_atom_mask is None:
+            raise ValueError(
+                "`ExtensiveMolecularScaler` has not been fitted yet. Cannot predict.")
+        counts = self._count_matrix(atomic_number)
+        offset = self.ridge.predict(counts)
+        if offset.ndim == 1:
+            offset = offset[:, None]
+        return offset
+
+    def _plot_predict(self, molecular_property: np.ndarray,
+                      atomic_number: list):
+        """Debug function to check prediction quality.
+
+        Creates a scatter plot of fitted (predicted) vs actual molecular
+        properties with MAE per property dimension.
+
+        Args:
+            molecular_property: Array of actual properties, shape ``(N,)`` or ``(N, D)``.
+            atomic_number: List of arrays of atomic numbers.
+
+        Returns:
+            matplotlib.figure.Figure: The generated figure.
+        """
+        import matplotlib.pyplot as plt
+
+        molecular_property = np.array(molecular_property)
+        if molecular_property.ndim <= 1:
+            molecular_property = np.expand_dims(molecular_property, axis=-1)
+        predict_prop = self._predict(atomic_number)
+        if predict_prop.ndim <= 1:
+            predict_prop = np.expand_dims(predict_prop, axis=-1)
+        mae = np.mean(np.abs(molecular_property - predict_prop), axis=0)
+        fig = plt.figure()
+        for i in range(predict_prop.shape[-1]):
+            plt.scatter(predict_prop[:, i], molecular_property[:, i], alpha=0.3,
+                        label="Pos: " + str(i) + " MAE: {0:0.4f} ".format(mae[i]))
+        plt.plot(np.arange(np.amin(molecular_property), np.amax(molecular_property), 0.05),
+                 np.arange(np.amin(molecular_property), np.amax(molecular_property), 0.05),
+                 color='red')
+        plt.xlabel('Fitted')
+        plt.ylabel('Actual')
+        plt.legend(loc='upper left', fontsize='x-small')
+        plt.show()
+        return fig
+
+    def get_scaling(self):
+        """Get scale of shape (1, n_properties).
+
+        Returns:
+            np.ndarray or None: Scale array expanded with leading axis,
+                or None if scaler has not been fitted.
+        """
+        if self.scale_ is None:
+            return None
+        return np.expand_dims(self.scale_, axis=0)
 
     def get_config(self) -> dict:
         return {"standardize_scale": self._standardize_scale}
@@ -904,6 +1034,17 @@ class QMGraphLabelScaler:
         """Fit and transform in one step."""
         self.fit(y, atomic_number=atomic_number)
         return self.transform(y, atomic_number=atomic_number)
+
+    def get_scaling(self):
+        """Get scale of shape (1, n_properties).
+
+        Returns:
+            np.ndarray or None: Scale array expanded with leading axis,
+                or None if scaler has not been fitted.
+        """
+        if self.scale_ is None:
+            return None
+        return np.expand_dims(self.scale_, axis=0)
 
     def get_weights(self) -> dict:
         if self._composed:

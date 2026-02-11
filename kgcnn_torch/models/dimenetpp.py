@@ -349,7 +349,7 @@ class DimeNetPPModel(nn.Module):
         # Use num_targets as final default output dimension.
         if use_output_mlp:
             if output_mlp_units is None:
-                output_mlp_units = [64, 12]
+                output_mlp_units = [64, num_targets]
             out_act = [output_mlp_activation] * (len(output_mlp_units) - 1) + ["linear"]
             self.output_mlp = MLP(
                 units=output_mlp_units, input_dim=num_targets,

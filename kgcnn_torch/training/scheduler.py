@@ -34,13 +34,30 @@ class LinearWarmupExponentialDecay(lr_scheduler.LambdaLR):
     def __init__(self, optimizer, warmup_epochs: int = None,
                  decay_rate: float = 0.96, decay_epochs: int = None,
                  warmup_steps: int = None, decay_steps: int = None,
+                 steps_per_epoch: int = None,
                  last_epoch: int = -1, **kwargs):
-        # Accept both epoch-based and step-based parameter names for hyper config compatibility.
-        # Keras LinearWarmupExponentialDecay uses warmup_steps/decay_steps at the step level;
-        # here we operate at the epoch level so they are treated as epoch counts.
-        self.warmup_epochs = max(warmup_epochs or warmup_steps or 10, 1)
+        # Accept both epoch-based and step-based parameter names for hyper config
+        # compatibility. Keras configs use warmup_steps/decay_steps at the per-batch
+        # step level, but this scheduler operates per-epoch. When warmup_epochs or
+        # decay_epochs are given they are used directly. When only warmup_steps or
+        # decay_steps are given, we convert them to epoch counts by dividing by
+        # steps_per_epoch (default 30, a typical estimate for ~1000 samples with
+        # batch_size=32). This avoids pathological behaviour where Keras step counts
+        # (e.g. warmup_steps=3000) are mistakenly used as epoch counts.
+        _spe = steps_per_epoch or int(kwargs.pop("batches_per_epoch", 30))
+        if warmup_epochs is not None:
+            self.warmup_epochs = max(warmup_epochs, 1)
+        elif warmup_steps is not None:
+            self.warmup_epochs = max(warmup_steps // _spe, 1)
+        else:
+            self.warmup_epochs = 10
         self.decay_rate = decay_rate
-        self.decay_epochs = decay_epochs or decay_steps or 10
+        if decay_epochs is not None:
+            self.decay_epochs = decay_epochs
+        elif decay_steps is not None:
+            self.decay_epochs = max(decay_steps // _spe, 1)
+        else:
+            self.decay_epochs = 10
 
         def lr_lambda(epoch):
             if epoch < self.warmup_epochs:
@@ -190,7 +207,10 @@ def get_scheduler(name: str, optimizer, **kwargs):
     Args:
         name: Scheduler name.
         optimizer: PyTorch optimizer.
-        **kwargs: Scheduler-specific parameters.
+        **kwargs: Scheduler-specific parameters. ``steps_per_epoch`` is
+            consumed by custom schedulers that need to convert Keras
+            step-level configs to epoch-level; it is stripped before
+            passing kwargs to PyTorch built-in schedulers.
 
     Returns:
         LR scheduler instance.
@@ -212,4 +232,9 @@ def get_scheduler(name: str, optimizer, **kwargs):
     }
     if name not in schedulers:
         raise ValueError(f"Unknown scheduler '{name}'. Available: {list(schedulers.keys())}")
-    return schedulers[name](optimizer, **kwargs)
+    cls = schedulers[name]
+    # Strip steps_per_epoch for PyTorch built-in schedulers that don't accept it.
+    if cls in (lr_scheduler.StepLR, lr_scheduler.ExponentialLR,
+               lr_scheduler.CosineAnnealingLR, lr_scheduler.ReduceLROnPlateau):
+        kwargs.pop("steps_per_epoch", None)
+    return cls(optimizer, **kwargs)

@@ -15,6 +15,6 @@ class MatProjectGapDataset(MatBenchDataset2020):
     label_units = "eV"
 
     def __init__(self, root=None, transform=None, pre_transform=None, pre_filter=None,
-                 reload: bool = False):
+                 reload: bool = False, **kwargs):
         super().__init__(matbench_name="matbench_mp_gap", root=root, transform=transform,
-                         pre_transform=pre_transform, pre_filter=pre_filter, reload=reload)
+                         pre_transform=pre_transform, pre_filter=pre_filter, reload=reload, **kwargs)

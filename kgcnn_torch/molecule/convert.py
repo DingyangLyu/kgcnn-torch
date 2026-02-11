@@ -102,7 +102,7 @@ try:
 
     if "BABEL_DATADIR" not in os.environ:
         module_logger.warning(
-            "In case openbabel fails, you can set `kgcnn.mol.convert.openbabel_smile_to_mol` to `None` for disable.")
+            "In case openbabel fails, you can set `kgcnn_torch.molecule.convert.openbabel_smile_to_mol` to `None` for disable.")
 
 
     def openbabel_smile_to_mol(smile: str, sanitize: bool = True, add_hydrogen: bool = True,

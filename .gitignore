@@ -1,16 +1,22 @@
-# Data directories (top-level only, not kgcnn_torch/data/)
+# Data directories
 /data/
+/datasets/
 
-# Large dataset file
+# Large dataset / pickle files
 MatPES-PBE-2025.1.json
-
-# Pickle data files
 *.pkl
+*.kgcnn.pickle
+
+# PyG processed data
+*_pyg.pt
+pre_filter.pt
+pre_transform.pt
 
 # Temporary training outputs
 tmp_matpes_2k/
 tmp_train_all_models/
 tmp_train_check/
+_train_worker.py
 
 # Python build artifacts
 *.egg-info/
@@ -19,3 +25,9 @@ __pycache__/
 *.pyo
 dist/
 build/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store

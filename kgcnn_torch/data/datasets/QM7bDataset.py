@@ -33,13 +33,18 @@ class QM7bDataset(KgcnnGraphDataset):
     file_name = "qm7b.csv"
 
     def kgcnn_prepare(self, kgcnn_ds):
-        """Convert QM7b .mat Coulomb matrices directly to graph properties.
+        """Convert QM7b .mat Coulomb matrices to graph properties.
 
-        Bypasses SDF conversion since reconstructed coordinates from Coulomb matrices
-        are approximate and often fail RDKit validation.
+        Uses the same reconstruction algorithm as Keras:
+        coulomb_matrix_to_inverse_distance_proton + coordinates_from_distance_matrix.
         """
         from scipy.io import loadmat
         from kgcnn_torch.molecule.methods import inverse_global_proton_dict
+        from kgcnn_torch.graph.methods import (
+            coulomb_matrix_to_inverse_distance_proton,
+            coordinates_from_distance_matrix,
+            invert_distance,
+        )
 
         mat_path = os.path.join(self.raw_dir, "qm7b.mat")
         mat = loadmat(mat_path)
@@ -47,10 +52,21 @@ class QM7bDataset(KgcnnGraphDataset):
         targets = mat["T"]  # (N, 14) labels
         n_samples = coulomb.shape[0]
 
-        # Extract proton numbers from diagonal: C_ii = 0.5 * Z^2.4
-        diag = np.array([np.diag(coulomb[i]) for i in range(n_samples)])
-        z_float = (2.0 * diag) ** (1.0 / 2.4)
-        z_all = np.round(z_float).astype("int")
+        # Get number of atoms per molecule from diagonal
+        graph_len = [int(np.around(np.sum(np.diag(coulomb[i]) > 0))) for i in range(n_samples)]
+
+        # Extract proton numbers and inverse distances using Keras-compatible function
+        proton_inv_dist = [
+            coulomb_matrix_to_inverse_distance_proton(
+                coulomb[i, :graph_len[i], :graph_len[i]],
+                unit_conversion=0.529177210903
+            )
+            for i in range(n_samples)
+        ]
+        proton = [x[1] for x in proton_inv_dist]
+        inv_dist = [x[0] for x in proton_inv_dist]
+        dist = [invert_distance(x) for x in inv_dist]
+        pos = [coordinates_from_distance_matrix(x) for x in dist]
 
         node_numbers = []
         node_coords = []
@@ -58,36 +74,11 @@ class QM7bDataset(KgcnnGraphDataset):
         graph_labels = []
 
         for i in range(n_samples):
-            mask = z_all[i] > 0
-            n_atoms = int(np.sum(mask))
-            z_i = z_all[i][:n_atoms]
-
+            z_i = np.array(proton[i], dtype="int")
             symbols = np.array([inverse_global_proton_dict.get(int(z), "X") for z in z_i])
 
-            # Reconstruct distances: C_ij = Z_i * Z_j / |R_i - R_j|
-            dist = np.zeros((n_atoms, n_atoms))
-            for a in range(n_atoms):
-                for b in range(a + 1, n_atoms):
-                    c_ab = coulomb[i, a, b]
-                    if abs(c_ab) > 1e-10:
-                        dist[a, b] = z_i[a] * z_i[b] / abs(c_ab)
-                        dist[b, a] = dist[a, b]
-
-            # Coordinate reconstruction via eigendecomposition of centered distance matrix
-            if n_atoms > 1:
-                d2 = dist ** 2
-                h = np.eye(n_atoms) - np.ones((n_atoms, n_atoms)) / n_atoms
-                b_mat = -0.5 * h @ d2 @ h
-                eigvals, eigvecs = np.linalg.eigh(b_mat)
-                idx = np.argsort(eigvals)[::-1][:3]
-                coords = eigvecs[:, idx] * np.sqrt(np.maximum(eigvals[idx], 0.0))
-                if coords.shape[1] < 3:
-                    coords = np.pad(coords, ((0, 0), (0, 3 - coords.shape[1])))
-            else:
-                coords = np.zeros((n_atoms, 3))
-
-            node_numbers.append(np.array(z_i, dtype="int"))
-            node_coords.append(np.array(coords, dtype="float32"))
+            node_numbers.append(z_i)
+            node_coords.append(np.array(pos[i], dtype="float32"))
             node_symbols.append(symbols)
             graph_labels.append(np.array(targets[i], dtype="float32"))
 

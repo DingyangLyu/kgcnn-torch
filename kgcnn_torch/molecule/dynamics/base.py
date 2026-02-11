@@ -37,8 +37,8 @@ class MolDynamicsModelPredictor:
             model_inputs (list, dict): List or single dictionary for model inputs.
             model_outputs (list, dict): List of model output names or dictionary of output mappings from keras model
                 output to the names in the return :obj:`GraphDict` .
-            graph_preprocessors (list): List of graph preprocessors, see :obj:`kgcnn.graph.preprocessor` .
-            graph_postprocessors (list): List of graph postprocessors, see :obj:`kgcnn.graph.postprocessor` .
+            graph_preprocessors (list): List of graph preprocessors, see :obj:`kgcnn_torch.graph.preprocessor` .
+            graph_postprocessors (list): List of graph postprocessors, see :obj:`kgcnn_torch.graph.postprocessor` .
             use_predict (bool): Whether to use :obj:`model.predict()` or call method :obj:`model()` .
             batch_size (int): Optional batch size for prediction.
             store_last_input (bool): Whether to store last input graph list for model input. Default is False.

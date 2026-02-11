@@ -261,7 +261,31 @@ def main():
         gl.load(pickle_path)
         pyg_data_list = gl.to_pyg_list()
     else:
-        raise ValueError(f"Force training requires a dataset pickle file. Got: {dataset_config}")
+        # Try class-based dataset loading (same logic as train_graph.py)
+        class_name = dataset_config.get("class_name", "")
+        config = dataset_config.get("config", {})
+        loaded = False
+        if class_name:
+            try:
+                import importlib
+                module = importlib.import_module("kgcnn_torch.data.datasets")
+                try:
+                    DatasetClass = getattr(module, class_name)
+                except AttributeError:
+                    DatasetClass = getattr(module, class_name + "Dataset")
+                dataset = DatasetClass(**config)
+                if hasattr(dataset, 'to_pyg_list'):
+                    pyg_data_list = dataset.to_pyg_list()
+                else:
+                    pyg_data_list = list(dataset)
+                loaded = True
+            except (ImportError, AttributeError) as e:
+                logger.warning(f"Could not load dataset class '{class_name}': {e}")
+        if not loaded:
+            raise ValueError(
+                f"Could not load force dataset. Provide a valid 'file_path' to a pickle "
+                f"file, or a valid 'class_name' in data config. Got: {dataset_config}"
+            )
 
     data_length = len(pyg_data_list)
     logger.info(f"Dataset loaded with {data_length} structures")
@@ -361,6 +385,7 @@ def main():
             sched_config = dict(scheduler_config)
             sched_name = sched_config.pop("class_name", None)
             if sched_name:
+                sched_config.setdefault("steps_per_epoch", len(train_loader))
                 scheduler = get_scheduler(sched_name, optimizer, **sched_config)
 
         # Training loop

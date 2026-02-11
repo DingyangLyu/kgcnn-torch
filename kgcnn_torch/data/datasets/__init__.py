@@ -20,6 +20,7 @@ Dataset categories:
 
 # Base classes
 from kgcnn_torch.data.datasets._base import KgcnnGraphDataset
+from kgcnn_torch.data.datasets.PickleGraphDataset import PickleGraphDataset
 
 # QM datasets
 from kgcnn_torch.data.datasets.QM7Dataset import QM7Dataset
@@ -70,6 +71,7 @@ from kgcnn_torch.data.datasets.MatPES2kDataset import MatPES2kDataset
 __all__ = [
     # Base
     "KgcnnGraphDataset",
+    "PickleGraphDataset",
     # QM
     "QM7Dataset",
     "QM7bDataset",

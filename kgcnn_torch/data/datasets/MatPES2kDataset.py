@@ -26,7 +26,7 @@ class MatPES2kDataset(KgcnnGraphDataset):
 
     def __init__(self, file_path: str = None, root=None,
                  transform=None, pre_transform=None, pre_filter=None,
-                 reload: bool = False):
+                 reload: bool = False, **kwargs):
         if file_path is None:
             file_path = os.path.join(
                 os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
@@ -35,7 +35,7 @@ class MatPES2kDataset(KgcnnGraphDataset):
             )
         self.file_path_local = file_path
         super().__init__(root=root, transform=transform, pre_transform=pre_transform,
-                         pre_filter=pre_filter, reload=reload)
+                         pre_filter=pre_filter, reload=reload, **kwargs)
 
     def kgcnn_prepare(self, kgcnn_ds: MemoryGraphDataset):
         """Load MatPES 2k pickle and apply key normalization.

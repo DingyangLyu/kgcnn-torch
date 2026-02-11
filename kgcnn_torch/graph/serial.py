@@ -36,7 +36,7 @@ def get_preprocessor(name: Union[str, dict], **kwargs):
     if isinstance(name, dict):
         return deserialize(name)
     # if given as string name. Lookup identifier.
-    obj_class = getattr(importlib.import_module(str("kgcnn.graph.preprocessor")), str(preprocessor_identifier[name]))
+    obj_class = getattr(importlib.import_module(str("kgcnn_torch.graph.preprocessor")), str(preprocessor_identifier[name]))
     return obj_class(**kwargs)
 
 
@@ -57,5 +57,5 @@ def get_postprocessor(name: Union[str, dict], **kwargs):
     if isinstance(name, dict):
         return deserialize(name)
     # if given as string. Lookup identifier.
-    obj_class = getattr(importlib.import_module(str("kgcnn.graph.postprocessor")), str(preprocessor_identifier[name]))
+    obj_class = getattr(importlib.import_module(str("kgcnn_torch.graph.postprocessor")), str(preprocessor_identifier[name]))
     return obj_class(**kwargs)

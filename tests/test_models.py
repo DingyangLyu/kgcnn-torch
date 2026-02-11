@@ -376,7 +376,7 @@ class TestINorpModel(unittest.TestCase):
 
     def test_forward_backward(self):
         from kgcnn_torch.models.inorp import INorpModel
-        model = INorpModel(node_dim=16, depth=2, units=16,
+        model = INorpModel(node_dim=16, depth=2,
                            edge_dim=8, num_targets=1)
         data = _make_data()
         out = model(data)
@@ -453,7 +453,7 @@ class TestMoGATModel(unittest.TestCase):
     def test_forward_backward(self):
         from kgcnn_torch.models.mogat import MoGATModel
         model = MoGATModel(node_dim=16, depthato=2, depthmol=2,
-                           units=16, num_targets=1)
+                           units=16, edge_dim=8, num_targets=1)
         data = _make_data()
         out = model(data)
         self.assertEqual(out.shape, (2, 1))

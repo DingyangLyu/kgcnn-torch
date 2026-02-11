@@ -31,7 +31,10 @@ class ISO17Dataset(KgcnnGraphDataset):
     ]
 
     def kgcnn_prepare(self, kgcnn_ds):
-        """Load ISO17 from ASE SQLite databases."""
+        """Load ISO17 from ASE SQLite databases.
+
+        Includes validation split, formula, and id properties matching Keras version.
+        """
         try:
             import ase.db
         except ImportError:
@@ -42,11 +45,11 @@ class ISO17Dataset(KgcnnGraphDataset):
             base_dir = os.path.join(self.raw_dir, "iso17")
 
         db_files = [
-            ("reference.db", "train", np.array([0])),
-            ("reference_eq.db", "train", np.array([1])),
-            ("test_within.db", "test", np.array([0])),
-            ("test_other.db", "test", np.array([1])),
-            ("test_eq.db", "test", np.array([2])),
+            ("reference.db", 0, None),
+            ("reference_eq.db", 1, None),
+            ("test_within.db", None, 0),
+            ("test_other.db", None, 1),
+            ("test_eq.db", None, 2),
         ]
 
         node_numbers = []
@@ -56,8 +59,10 @@ class ISO17Dataset(KgcnnGraphDataset):
         atomic_forces = []
         train_split = []
         test_split = []
+        formulas = []
+        ids = []
 
-        for db_name, split_type, split_val in db_files:
+        for db_name, train_val, test_val in db_files:
             db_path = os.path.join(base_dir, db_name)
             if not os.path.exists(db_path):
                 continue
@@ -67,11 +72,13 @@ class ISO17Dataset(KgcnnGraphDataset):
                 node_numbers.append(np.array(atoms.get_atomic_numbers(), dtype="int"))
                 node_coords.append(np.array(atoms.get_positions(), dtype="float"))
                 node_symbols.append(np.array(atoms.get_chemical_symbols()))
-                total_energies.append(np.array([row.total_energy], dtype="float"))
+                total_energies.append(np.expand_dims(row['total_energy'], axis=-1))
                 atomic_forces.append(np.array(row.data.get("atomic_forces",
                                               np.zeros_like(atoms.get_positions())), dtype="float"))
-                train_split.append(split_val if split_type == "train" else None)
-                test_split.append(split_val if split_type == "test" else None)
+                formulas.append(str(atoms.symbols))
+                ids.append(row.id)
+                train_split.append(train_val)
+                test_split.append(test_val)
 
         kgcnn_ds.assign_property("node_number", node_numbers)
         kgcnn_ds.assign_property("node_coordinates", node_coords)
@@ -80,3 +87,14 @@ class ISO17Dataset(KgcnnGraphDataset):
         kgcnn_ds.assign_property("force", atomic_forces)
         kgcnn_ds.assign_property("train", train_split)
         kgcnn_ds.assign_property("test", test_split)
+        kgcnn_ds.assign_property("formula", formulas)
+        kgcnn_ds.assign_property("id", ids)
+
+        # Load validation indices (for reference.db entries at the beginning)
+        valid_file = os.path.join(base_dir, "validation_ids.txt")
+        if os.path.exists(valid_file):
+            with open(valid_file) as f:
+                valid_indices = [int(x.strip()) for x in f.readlines()]
+            for i in valid_indices:
+                if i - 1 < len(kgcnn_ds):
+                    kgcnn_ds[i - 1].update({"valid": np.array(0)})

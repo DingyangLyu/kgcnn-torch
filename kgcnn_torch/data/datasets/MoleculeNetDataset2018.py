@@ -85,7 +85,7 @@ class MoleculeNetDataset2018(KgcnnGraphDataset):
 
     def __init__(self, molnet_name: str = None, root=None,
                  transform=None, pre_transform=None, pre_filter=None,
-                 reload: bool = False):
+                 reload: bool = False, **kwargs):
         name = molnet_name or self._molnet_name
         if name is None:
             raise ValueError("Must provide molnet_name or set _molnet_name on subclass.")
@@ -103,7 +103,7 @@ class MoleculeNetDataset2018(KgcnnGraphDataset):
             + info["download_file_name"]
         )
         super().__init__(root=root, transform=transform, pre_transform=pre_transform,
-                         pre_filter=pre_filter, reload=reload)
+                         pre_filter=pre_filter, reload=reload, **kwargs)
 
     def _create_kgcnn_dataset(self):
         from kgcnn_torch.data.moleculenet import MoleculeNetDataset

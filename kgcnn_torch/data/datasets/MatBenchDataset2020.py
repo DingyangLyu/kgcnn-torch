@@ -108,7 +108,7 @@ class MatBenchDataset2020(KgcnnGraphDataset):
 
     def __init__(self, matbench_name: str = None, root=None,
                  transform=None, pre_transform=None, pre_filter=None,
-                 reload: bool = False):
+                 reload: bool = False, **kwargs):
         name = matbench_name or self._matbench_name
         if name is None:
             raise ValueError("Must provide matbench_name or set _matbench_name on subclass.")
@@ -125,7 +125,7 @@ class MatBenchDataset2020(KgcnnGraphDataset):
             "https://ml.materialsproject.org/projects/" + info["download_file_name"]
         )
         super().__init__(root=root, transform=transform, pre_transform=pre_transform,
-                         pre_filter=pre_filter, reload=reload)
+                         pre_filter=pre_filter, reload=reload, **kwargs)
 
     def _create_kgcnn_dataset(self):
         from kgcnn_torch.data.crystal import CrystalDataset

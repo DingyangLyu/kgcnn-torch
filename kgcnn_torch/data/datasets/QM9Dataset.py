@@ -9,15 +9,23 @@ References:
 """
 import os
 import json
+import logging
 import numpy as np
 import pandas as pd
 from kgcnn_torch.data.datasets._base import KgcnnGraphDataset, DownloadDataset
 
+logger = logging.getLogger(__name__)
+
 
 class QM9Dataset(KgcnnGraphDataset):
-    """QM9 dataset: 134k small organic molecules with 15+ properties."""
+    """QM9 dataset: 134k small organic molecules with 15+ properties.
+
+    Molecules that have a different SMILES code after convergence can be
+    removed with :meth:`remove_uncharacterized`.
+    """
 
     dataset_name = "QM9"
+    _removed_uncharacterized = False
     download_info = {
         "dataset_name": "QM9",
         "data_directory_name": "qm9",
@@ -151,3 +159,44 @@ class QM9Dataset(KgcnnGraphDataset):
         if node_symbols is not None:
             kgcnn_ds.assign_property("graph_attributes", [
                 mmw(x) if x is not None else None for x in node_symbols])
+
+    def remove_uncharacterized(self):
+        """Remove 3054 uncharacterized molecules that failed structure test from this dataset.
+
+        Reads the ``uncharacterized.txt`` file (downloaded during processing) and
+        filters out the listed molecule indices by setting PyG's ``_indices``.
+
+        Returns:
+            numpy.ndarray: Sorted (descending) array of removed 0-based indices.
+        """
+        if self._removed_uncharacterized:
+            logger.warning("Uncharacterized molecules have already been removed.")
+            return np.array([], dtype="int")
+
+        unchar_path = os.path.join(self.raw_dir, "uncharacterized.txt")
+        if not os.path.exists(unchar_path):
+            raise FileNotFoundError(
+                f"Cannot find uncharacterized.txt at {unchar_path}. "
+                f"Try reloading the dataset with reload=True."
+            )
+
+        with open(unchar_path, "r") as f:
+            data = f.readlines()[9:-1]
+        data = [x.strip().split(" ") for x in data]
+        data = [[y for y in x if y != ""] for x in data]
+        indices = np.array([x[0] for x in data], dtype="int") - 1
+        remove_set = set(indices.tolist())
+
+        # Compute valid indices respecting any existing _indices filter
+        if self._indices is not None:
+            current_indices = list(self._indices)
+        else:
+            current_indices = list(range(len(self)))
+
+        valid_indices = [i for i in current_indices if i not in remove_set]
+        n_removed = len(current_indices) - len(valid_indices)
+        self._indices = valid_indices
+
+        logger.info("Removed %s uncharacterized molecules." % n_removed)
+        self._removed_uncharacterized = True
+        return np.flip(np.sort(indices))

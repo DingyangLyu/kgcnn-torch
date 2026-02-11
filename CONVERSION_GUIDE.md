@@ -43,7 +43,7 @@
 **新项目**: kgcnn-torch v0.1.0 — 基于 PyTorch + PyTorch Geometric (PyG) 的纯 PyTorch 实现，保留 KGCNN 的模型架构和数据处理能力。位于 `kgcnn-torch/`。
 
 **转换范围**:
-- 5 个核心 GNN 模型: GCN, GAT, SchNet, PAiNN, DimeNet++
+- 26 个 GNN 模型: GCN, GAT, GATv2, GIN, rGIN, GraphSAGE, RGCN, GNNFilm, SchNet, PAiNN, DimeNet++, EGNN, MXMNet, MEGNet, CGCNN, DMPNN, CMPNN, DGIN, NMPN, AttentiveFP, MoGAT, INorp, HamNet, MAT, MEGAN, HDNNP2nd
 - 完整的层级库: scatter ops, gather, aggregation, convolution, geometry, attention, pooling, MLP, normalization, update, scale
 - 数据管道: GraphDict, MemoryGraphList → PyG Data 转换
 - 训练基础设施: 训练循环, 学习率调度器, 指标, 损失函数

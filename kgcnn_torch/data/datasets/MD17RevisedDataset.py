@@ -43,7 +43,7 @@ class MD17RevisedDataset(KgcnnGraphDataset):
 
     def __init__(self, trajectory_name: str = None, root=None,
                  transform=None, pre_transform=None, pre_filter=None,
-                 reload: bool = False):
+                 reload: bool = False, **kwargs):
         if trajectory_name not in self.possible_trajectory_names:
             raise ValueError(
                 f"Unknown trajectory '{trajectory_name}'. "
@@ -53,7 +53,7 @@ class MD17RevisedDataset(KgcnnGraphDataset):
         self.dataset_name = f"MD17Revised_{trajectory_name}"
         self.file_name = f"rmd17_{trajectory_name}.npz"
         super().__init__(root=root, transform=transform, pre_transform=pre_transform,
-                         pre_filter=pre_filter, reload=reload)
+                         pre_filter=pre_filter, reload=reload, **kwargs)
 
     def kgcnn_prepare(self, kgcnn_ds):
         """Load revised MD17 trajectory from NPZ file."""
@@ -86,28 +86,37 @@ class MD17RevisedDataset(KgcnnGraphDataset):
             kgcnn_ds.assign_property("node_number",
                                      [np.array(z, dtype="int") for _ in range(num_points)])
 
-        # Load train/test splits if available
+        # Load train/test splits matching Keras convention:
+        # Each graph gets a "train" and "test" property containing an array of
+        # split IDs (1-5) it belongs to, or None. This is compatible with
+        # MemoryGraphDataset.get_train_test_indices(train="train", test="test").
         splits_dir = os.path.join(self.raw_dir, "rmd17", "rmd17", "splits")
         if not os.path.exists(splits_dir):
             splits_dir = os.path.join(npz_dir, "splits")
         if os.path.exists(splits_dir):
-            for split_idx in range(1, 6):
-                split_file = os.path.join(
-                    splits_dir, f"index_train_0{split_idx}.csv")
-                if os.path.exists(split_file):
-                    train_indices = np.loadtxt(split_file, dtype="int", delimiter=",")
-                    train_prop = [None] * num_points
-                    for idx in train_indices:
-                        if idx < num_points:
-                            train_prop[idx] = np.array([1])
-                    kgcnn_ds.assign_property(f"train_{split_idx}", train_prop)
+            def _read_split_indices(file_path: str) -> set:
+                if not os.path.exists(file_path):
+                    return set()
+                values = np.loadtxt(file_path, dtype="int", delimiter=",")
+                values = np.atleast_1d(values).astype(int)
+                return set(values.tolist())
 
-                test_file = os.path.join(
-                    splits_dir, f"index_test_0{split_idx}.csv")
-                if os.path.exists(test_file):
-                    test_indices = np.loadtxt(test_file, dtype="int", delimiter=",")
-                    test_prop = [None] * num_points
-                    for idx in test_indices:
-                        if idx < num_points:
-                            test_prop[idx] = np.array([1])
-                    kgcnn_ds.assign_property(f"test_{split_idx}", test_prop)
+            splits_train = []
+            splits_test = []
+            for split_idx in range(1, 6):
+                train_file = os.path.join(splits_dir, f"index_train_0{split_idx}.csv")
+                splits_train.append(_read_split_indices(train_file))
+
+                test_file = os.path.join(splits_dir, f"index_test_0{split_idx}.csv")
+                splits_test.append(_read_split_indices(test_file))
+
+            property_train = []
+            property_test = []
+            for i in range(num_points):
+                is_train = [j + 1 for j, s in enumerate(splits_train) if i in s]
+                is_test = [j + 1 for j, s in enumerate(splits_test) if i in s]
+                property_train.append(np.array(is_train, dtype="int") if is_train else None)
+                property_test.append(np.array(is_test, dtype="int") if is_test else None)
+
+            kgcnn_ds.assign_property("train", property_train)
+            kgcnn_ds.assign_property("test", property_test)

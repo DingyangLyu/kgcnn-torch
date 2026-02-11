@@ -38,7 +38,11 @@ class QM7Dataset(KgcnnGraphDataset):
         )
 
     def kgcnn_prepare(self, kgcnn_ds):
-        """Convert QM7 .mat file to XYZ + CSV, then read into memory."""
+        """Convert QM7 .mat file to XYZ + CSV, then read into memory.
+
+        Includes 5-fold CV splits and mean molecular weight graph_attributes
+        matching Keras version.
+        """
         from scipy.io import loadmat
         from kgcnn_torch.molecule.methods import inverse_global_proton_dict
         from kgcnn_torch.molecule.io import write_list_to_xyz_file
@@ -80,3 +84,32 @@ class QM7Dataset(KgcnnGraphDataset):
         # Use QMDataset pipeline
         kgcnn_ds.prepare_data(overwrite=False, make_sdf=True)
         kgcnn_ds.read_in_memory(label_column_name="u0_atom [kcal/mol]")
+
+        # Add 5-fold CV splits matching Keras
+        splits_path = os.path.join(path, "qm7_splits.npy")
+        if os.path.exists(splits_path):
+            splits = np.load(splits_path)
+            for i in range(len(kgcnn_ds)):
+                train = []
+                test = []
+                for j, split in enumerate(splits):
+                    if i in split:
+                        test.append(j)
+                    else:
+                        train.append(j)
+                kgcnn_ds[i].assign_property("test", np.array(test, dtype="int"))
+                kgcnn_ds[i].assign_property("train", np.array(train, dtype="int"))
+
+        # Mean molecular weight (graph_attributes) matching Keras
+        mass_dict = {'H': 1.0079, 'C': 12.0107, 'N': 14.0067, 'O': 15.9994,
+                     'F': 18.9984, 'S': 32.065, "C3": 12.0107}
+
+        def mmw(atoms):
+            mass = [mass_dict[x[:1]] for x in atoms]
+            return np.array([np.mean(mass), len(mass)])
+
+        node_symbols = kgcnn_ds.obtain_property("node_symbol")
+        kgcnn_ds.assign_property(
+            "graph_attributes",
+            [mmw(x) if x is not None else None for x in node_symbols]
+        )

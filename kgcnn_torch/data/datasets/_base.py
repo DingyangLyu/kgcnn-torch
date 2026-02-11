@@ -43,6 +43,11 @@ class KgcnnGraphDataset(InMemoryDataset):
         pre_transform: PyG pre-transform applied once during processing.
         pre_filter: PyG pre-filter applied once during processing.
         reload: If True, forces reprocessing (deletes processed files).
+        kgcnn_pickle_path: Optional path to an existing ``*.kgcnn.pickle`` file. If set, the
+            graphs are loaded from this file (byte-identical to the Keras cache) and
+            ``download``/``kgcnn_prepare`` are skipped.
+        kgcnn_source_dir: Optional directory containing ``<dataset_name>.kgcnn.pickle``. Convenience
+            alternative to ``kgcnn_pickle_path``.
     """
 
     # Override in subclasses
@@ -53,10 +58,14 @@ class KgcnnGraphDataset(InMemoryDataset):
 
     def __init__(self, root: Optional[str] = None,
                  transform=None, pre_transform=None, pre_filter=None,
-                 reload: bool = False):
+                 reload: bool = False,
+                 kgcnn_pickle_path: Optional[str] = None,
+                 kgcnn_source_dir: Optional[str] = None):
         if root is None:
             root = os.path.join(os.path.expanduser("~"), "kgcnn_datasets", self.dataset_name)
         self._reload = reload
+        self._kgcnn_pickle_path = kgcnn_pickle_path
+        self._kgcnn_source_dir = kgcnn_source_dir
 
         if reload:
             # Remove processed files to trigger reprocessing
@@ -121,7 +130,21 @@ class KgcnnGraphDataset(InMemoryDataset):
         kgcnn_ds = self._create_kgcnn_dataset()
         pickle_path = os.path.join(self.raw_dir, self.dataset_name + ".kgcnn.pickle")
 
-        if os.path.exists(pickle_path) and not self._reload:
+        external_pickle_path = None
+        if self._kgcnn_pickle_path:
+            external_pickle_path = self._kgcnn_pickle_path
+        elif self._kgcnn_source_dir:
+            external_pickle_path = os.path.join(
+                self._kgcnn_source_dir, self.dataset_name + ".kgcnn.pickle"
+            )
+
+        if external_pickle_path is not None:
+            if not os.path.exists(external_pickle_path):
+                raise FileNotFoundError(
+                    f"External kgcnn pickle not found: {external_pickle_path}"
+                )
+            kgcnn_ds.load(external_pickle_path)
+        elif os.path.exists(pickle_path) and not self._reload:
             kgcnn_ds.load(pickle_path)
         else:
             self._download_to_raw_dir()

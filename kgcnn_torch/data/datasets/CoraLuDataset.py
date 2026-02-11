@@ -37,7 +37,11 @@ class CoraLuDataset(KgcnnGraphDataset):
     }
 
     def kgcnn_prepare(self, kgcnn_ds):
-        """Load Cora-Lu from text files."""
+        """Load Cora-Lu from text files.
+
+        Includes edge sorting, edge_attributes, edge_weights, and node_number
+        matching Keras version.
+        """
         base_path = os.path.join(self.raw_dir, "cora_lu")
 
         # Find the actual directory (may be nested)
@@ -52,40 +56,40 @@ class CoraLuDataset(KgcnnGraphDataset):
             raise FileNotFoundError("Cannot find cora.cites in extracted data.")
 
         # Read content file (nodes + features + label)
-        node_ids = []
-        features = []
-        labels = []
+        lines = []
         with open(content_file, "r") as f:
-            for line in f:
-                parts = line.strip().split("\t")
-                node_ids.append(int(parts[0]))
-                features.append([int(x) for x in parts[1:-1]])
-                labels.append(parts[-1])
+            lines = f.readlines()
 
-        # Map node IDs to sequential indices
-        id_to_idx = {nid: i for i, nid in enumerate(node_ids)}
+        labels_str = [x.strip().split('\t')[-1] for x in lines]
+        nodes_raw = [x.strip().split('\t')[0:-1] for x in lines]
+        nodes = np.array([[int(y) for y in x] for x in nodes_raw], dtype="int64")
+
+        # Map node IDs to sequential indices (matching Keras)
+        node_map = np.zeros(np.max(nodes[:, 0]) + 1, dtype="int64")
+        idx_new = np.arange(len(nodes))
+        node_map[nodes[:, 0]] = idx_new
 
         # Read citation edges
-        edges = []
-        with open(cites_file, "r") as f:
-            for line in f:
-                parts = line.strip().split("\t")
-                if len(parts) == 2:
-                    src, tgt = int(parts[0]), int(parts[1])
-                    if src in id_to_idx and tgt in id_to_idx:
-                        edges.append([id_to_idx[tgt], id_to_idx[src]])
+        ids = np.loadtxt(cites_file, dtype="int64")
+        indexlist = node_map[ids]
 
-        node_attributes = np.array(features, dtype="float32")
-        edge_indices = np.array(edges, dtype="int") if edges else np.zeros((0, 2), dtype="int")
+        # Sort edges with stable mergesort (matching Keras)
+        order1 = np.argsort(indexlist[:, 1], axis=0, kind='mergesort')  # stable!
+        ind1 = indexlist[order1]
+        order2 = np.argsort(ind1[:, 0], axis=0, kind='mergesort')
+        indices = ind1[order2]
 
-        # Encode labels
-        num_classes = len(self.class_label_mapping)
-        node_labels = np.zeros((len(labels), num_classes), dtype="float32")
-        for i, lab in enumerate(labels):
-            if lab in self.class_label_mapping:
-                node_labels[i, self.class_label_mapping[lab]] = 1.0
+        # Class label encoding
+        label_id = np.array([self.class_label_mapping[x] for x in labels_str], dtype="int")
+        label_onehot = np.expand_dims(label_id, axis=-1)
+        label_onehot = np.array(label_onehot == np.arange(7), dtype="float")
 
-        # Single graph dataset
+        node_attributes = nodes[:, 1:].astype("float32")
+
+        # Single graph dataset (matching Keras properties)
         kgcnn_ds.assign_property("node_attributes", [node_attributes])
-        kgcnn_ds.assign_property("node_labels", [node_labels])
-        kgcnn_ds.assign_property("edge_indices", [edge_indices])
+        kgcnn_ds.assign_property("edge_indices", [indices])
+        kgcnn_ds.assign_property("edge_attributes", [np.ones_like(indices)[:, :1]])
+        kgcnn_ds.assign_property("node_labels", [label_onehot])
+        kgcnn_ds.assign_property("node_number", [label_id])
+        kgcnn_ds.assign_property("edge_weights", [np.ones_like(indices)[:, :1]])
