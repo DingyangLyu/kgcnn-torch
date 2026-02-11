@@ -129,6 +129,7 @@ class RGCNModel(nn.Module):
                  node_pooling: str = "sum",
                  output_units: list = None,
                  output_activation: str = "relu",
+                 output_final_activation: str = "softmax",
                  num_targets: int = 1,
                  output_embedding: str = "graph",
                  use_node_embedding: bool = True,
@@ -146,7 +147,9 @@ class RGCNModel(nn.Module):
             use_residual: Whether to add residual connections between layers.
             node_pooling: Pooling method for graph-level readout.
             output_units: Hidden dims for the output MLP. If None, defaults to [units, units].
-            output_activation: Activation for output MLP.
+            output_activation: Activation for output MLP hidden layers.
+            output_final_activation: Activation for output MLP final layer.
+                Default is "softmax" to match the Keras literature reference.
             num_targets: Number of output targets.
             use_node_embedding: Whether to use nn.Embedding for integer node features.
             num_embeddings: Vocabulary size for the node embedding.
@@ -185,8 +188,7 @@ class RGCNModel(nn.Module):
 
         # Output MLP
         out_units = output_units + [num_targets]
-        # Regression heads must stay linear to match kgcnn keras defaults.
-        out_act = [output_activation] * len(output_units) + ["linear"]
+        out_act = [output_activation] * len(output_units) + [output_final_activation]
         self.output_mlp = MLP(
             units=out_units,
             input_dim=units,

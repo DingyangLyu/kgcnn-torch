@@ -134,6 +134,7 @@ class SchNetModel(nn.Module):
 - **没有 `get_config()`** — PyTorch 不需要，直接 `torch.save(model.state_dict(), ...)`
 - **没有 `compute_output_shape()`** — 不需要静态形状推断
 - **没有 `build()`** — 所有参数在 `__init__` 中创建
+- **GNNFilm/RGCN 输出头默认值策略** — `kgcnn-torch` 默认 `output_final_activation="linear"`（logits-first）；若需严格复刻 Keras literature 默认，可显式设为 `"softmax"`
 
 ---
 
@@ -1209,6 +1210,28 @@ dist = torch.tensor([[0.5], [1.5], [2.5]], requires_grad=True)  # 直接创建�
 ```python
 v_v = self.lin_v(v)  # v: (N, 3, F) → v_v: (N, 3, F)
 # nn.Linear 自动广播到 batch dimensions
+```
+
+### 坑 8: GNNFilm/RGCN 的默认输出激活与 Keras literature 不同
+
+**背景**: Keras literature 的 `GNNFilm` / `RGCN` 默认 `output_mlp.activation="softmax"`（且常见 `units=1`）。  
+而在 `kgcnn-torch` 中，这两个模型默认采用 `output_final_activation="linear"`，用于和 logits 损失（如 `BCEWithLogitsLoss` / `CrossEntropyLoss`）配套。
+
+**为什么这么做**:
+
+- `units=1` 时使用 `softmax` 会退化为常数输出 1，容易导致训练和梯度检查异常。
+- 训练脚本通常以 logits 为输入计算损失，因此默认线性头更稳妥。
+
+**如何在两种模式间切换**:
+
+```python
+# 训练优先（默认）
+model = GNNFilmModel(..., output_final_activation="linear")
+model = RGCNModel(..., output_final_activation="linear")
+
+# 严格复刻 Keras literature 默认
+model = GNNFilmModel(..., output_final_activation="softmax")
+model = RGCNModel(..., output_final_activation="softmax")
 ```
 
 ---

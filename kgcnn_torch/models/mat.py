@@ -358,9 +358,11 @@ class MATModel(nn.Module):
             keras_uniform_init_embedding_(self.node_embedding)
         self.input_projection = nn.Linear(input_node_dim, embedding_units, bias=False)
 
-        # Adjacency projection: Dense(1, use_bias=False) applied when adjacency has feature dim.
-        # Matches Keras: adj = Dense(1, use_bias=False)(adj) when has_edge_dim is True.
+        # Adjacency projection: Dense(1, use_bias=False) applied only when adjacency has feature dim.
+        # Matches Keras: adj = Dense(1, use_bias=False)(adj) when has_edge_dim is True,
+        # otherwise just expand the mask dimension.
         self.adj_projection = nn.Linear(1, 1, bias=False)
+        self._has_edge_dim = None  # Will be set on first forward call based on input shape
 
         # Transformer blocks
         self.attention_norms = nn.ModuleList()
@@ -467,14 +469,15 @@ class MATModel(nn.Module):
         # dist: (B, N, N, 1), dist_mask: (B, N, N, 1)
 
         # Process adjacency to ensure shape (B, N, N, 1)
+        # Matches Keras: only apply Dense(1) projection when adjacency has edge features,
+        # otherwise just expand the dimension.
         if adjacency.dim() == 3:
-            # (B, N, N) -> (B, N, N, 1)
+            # (B, N, N) — no edge feature dimension, just expand mask
             adj = adjacency.unsqueeze(-1).float()
         else:
+            # (B, N, N, F) — has edge feature dimension, project to (B, N, N, 1)
             adj = adjacency.float()
-
-        # Apply adjacency projection (matches Keras Dense(1, use_bias=False) for has_edge_dim)
-        adj = self.adj_projection(adj)
+            adj = self.adj_projection(adj)
 
         # Project node features to embedding dimension
         h = self.input_projection(n)  # (B, N, embedding_units)

@@ -659,6 +659,7 @@ def test_rgcn():
         num_relations=cfg.num_relations, rgcn_activation="swish",
         rgcn_pooling="sum", use_residual=False, node_pooling="sum",
         output_units=cfg.output_units, output_activation=cfg.output_activation,
+        output_final_activation=cfg.output_final_activation,
         num_targets=cfg.num_targets, output_embedding="graph",
         use_node_embedding=True, num_embeddings=cfg.num_embeddings)
     torch_model.train()
@@ -689,6 +690,7 @@ def test_gnnfilm():
         num_relations=cfg.num_relations, activation="swish",
         modulation_activation="sigmoid", film_pooling="sum", node_pooling="sum",
         output_units=cfg.output_units, output_activation=cfg.output_activation,
+        output_final_activation=cfg.output_final_activation,
         num_targets=cfg.num_targets, output_embedding="graph",
         use_node_embedding=True, num_embeddings=cfg.num_embeddings)
     torch_model.train()

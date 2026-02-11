@@ -445,7 +445,7 @@ class GraphPreProcessorBase(GraphProcessorBase):
     and assigns the (array-like) output to a :obj:`GraphDict` by name. To specify the kwargs for call and the names that
     are expected to be set in the graph dictionary, the class attributes :obj:`self._to_obtain` ,
     :obj:`self._to_assign` , :obj:`self._to_assign` , :obj:`self._call_kwargs` , :obj:`self._search` must be set
-    appropriately in the constructor. The design of this class should be similar to :obj:`ks.layers.Layer` .
+    appropriately in the constructor. The design of this class should be similar to :obj:`torch.nn.Module` .
     Example implementation for subclass:
 
     .. code-block:: python
@@ -523,7 +523,7 @@ class GraphPostProcessorBase(GraphProcessorBase):
     and assigns the (array-like) output to a :obj:`GraphDict` by name. To specify the kwargs for call and the names that
     are expected to be set in the graph dictionary, the class attributes :obj:`self._to_obtain` ,
     :obj:`self._to_assign` , :obj:`self._to_assign` , :obj:`self._call_kwargs` , :obj:`self._search` must be set
-    appropriately in the constructor. The design of this class should be similar to :obj:`ks.layers.Layer` .
+    appropriately in the constructor. The design of this class should be similar to :obj:`torch.nn.Module` .
     Example implementation for subclass:
 
     .. code-block:: python

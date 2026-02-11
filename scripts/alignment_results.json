@@ -1,0 +1,254 @@
+[
+  {
+    "model": "AttentiveFP",
+    "script": "align_attentivefp_model.py",
+    "status": "PASS",
+    "mae": 0.0,
+    "rmse": 0.0,
+    "max_abs": 0.0,
+    "error": ""
+  },
+  {
+    "model": "CGCNN",
+    "script": "align_cgcnn_model.py",
+    "status": "PASS",
+    "mae": 2.399739e-05,
+    "rmse": 2.682386e-05,
+    "max_abs": 3.969669e-05,
+    "error": ""
+  },
+  {
+    "model": "CMPNN",
+    "script": "align_cmpnn_model.py",
+    "status": "PASS",
+    "mae": 4.768372e-07,
+    "rmse": 1.348699e-06,
+    "max_abs": 3.814697e-06,
+    "error": ""
+  },
+  {
+    "model": "DGIN",
+    "script": "align_dgin_model.py",
+    "status": "PASS",
+    "mae": 4.656613e-09,
+    "rmse": 6.650974e-09,
+    "max_abs": 1.490116e-08,
+    "error": ""
+  },
+  {
+    "model": "DimeNet++",
+    "script": "align_dimenetpp_model.py",
+    "status": "PASS",
+    "mae": 2.235174e-08,
+    "rmse": 2.35608e-08,
+    "max_abs": 2.980232e-08,
+    "error": ""
+  },
+  {
+    "model": "DMPNN",
+    "script": "align_dmpnn_model.py",
+    "status": "PASS",
+    "mae": 0.0,
+    "rmse": 0.0,
+    "max_abs": 0.0,
+    "error": ""
+  },
+  {
+    "model": "EGNN",
+    "script": "align_egnn_model.py",
+    "status": "PASS",
+    "mae": 1.676381e-08,
+    "rmse": 2.172199e-08,
+    "max_abs": 2.980232e-08,
+    "error": ""
+  },
+  {
+    "model": "GAT",
+    "script": "align_gat_model.py",
+    "status": "PASS",
+    "mae": 2.211891e-09,
+    "rmse": 2.485951e-09,
+    "max_abs": 3.72529e-09,
+    "error": ""
+  },
+  {
+    "model": "GATv2",
+    "script": "align_gatv2_model.py",
+    "status": "PASS",
+    "mae": 0.0,
+    "rmse": 0.0,
+    "max_abs": 0.0,
+    "error": ""
+  },
+  {
+    "model": "GCN",
+    "script": "align_gcn_model.py",
+    "status": "PASS",
+    "mae": 3.72529e-09,
+    "rmse": 1.053671e-08,
+    "max_abs": 2.980232e-08,
+    "error": ""
+  },
+  {
+    "model": "GIN",
+    "script": "align_gin_model.py",
+    "status": "PASS",
+    "mae": 1.117587e-08,
+    "rmse": 2.235174e-08,
+    "max_abs": 5.960464e-08,
+    "error": ""
+  },
+  {
+    "model": "GNNFilm",
+    "script": "align_gnnfilm_model.py",
+    "status": "PASS",
+    "mae": 5.215406e-08,
+    "rmse": 5.960464e-08,
+    "max_abs": 1.192093e-07,
+    "error": ""
+  },
+  {
+    "model": "GraphSAGE",
+    "script": "align_graphsage_model.py",
+    "status": "PASS",
+    "mae": 0.0,
+    "rmse": 0.0,
+    "max_abs": 0.0,
+    "error": ""
+  },
+  {
+    "model": "HamNet",
+    "script": "align_hamnet_model.py",
+    "status": "PASS",
+    "mae": 4.656613e-09,
+    "rmse": 5.890201e-09,
+    "max_abs": 7.450581e-09,
+    "error": ""
+  },
+  {
+    "model": "HDNNP2nd-AtomWise",
+    "script": "align_hdnnp2nd_atomwise_model.py",
+    "status": "PASS",
+    "mae": 9.313226e-10,
+    "rmse": 1.862645e-09,
+    "max_abs": 3.72529e-09,
+    "error": ""
+  },
+  {
+    "model": "HDNNP2nd-Behler",
+    "script": "align_hdnnp2nd_behler_model.py",
+    "status": "PASS",
+    "mae": 0.0,
+    "rmse": 0.0,
+    "max_abs": 0.0,
+    "error": ""
+  },
+  {
+    "model": "HDNNP2nd",
+    "script": "align_hdnnp2nd_model.py",
+    "status": "PASS",
+    "mae": 1.396984e-09,
+    "rmse": 2.945101e-09,
+    "max_abs": 7.450581e-09,
+    "error": ""
+  },
+  {
+    "model": "INorp",
+    "script": "align_inorp_model.py",
+    "status": "PASS",
+    "mae": 0.0,
+    "rmse": 0.0,
+    "max_abs": 0.0,
+    "error": ""
+  },
+  {
+    "model": "MAT",
+    "script": "align_mat_model.py",
+    "status": "PASS",
+    "mae": 1.490116e-08,
+    "rmse": 4.214685e-08,
+    "max_abs": 1.192093e-07,
+    "error": ""
+  },
+  {
+    "model": "MEGAN",
+    "script": "align_megan_model.py",
+    "status": "PASS",
+    "mae": 4.889444e-09,
+    "rmse": 7.243989e-09,
+    "max_abs": 1.676381e-08,
+    "error": ""
+  },
+  {
+    "model": "MEGNet",
+    "script": "align_megnet_model.py",
+    "status": "PASS",
+    "mae": 1.862645e-09,
+    "rmse": 5.268356e-09,
+    "max_abs": 1.490116e-08,
+    "error": ""
+  },
+  {
+    "model": "MoGAT",
+    "script": "align_mogat_model.py",
+    "status": "PASS",
+    "mae": 5.587935e-09,
+    "rmse": 9.125061e-09,
+    "max_abs": 1.490116e-08,
+    "error": ""
+  },
+  {
+    "model": "MXMNet",
+    "script": "align_mxmnet_model.py",
+    "status": "PASS",
+    "mae": 0.0,
+    "rmse": 0.0,
+    "max_abs": 0.0,
+    "error": ""
+  },
+  {
+    "model": "NMPN",
+    "script": "align_nmpn_model.py",
+    "status": "PASS",
+    "mae": 1.490116e-08,
+    "rmse": 2.980232e-08,
+    "max_abs": 5.960464e-08,
+    "error": ""
+  },
+  {
+    "model": "PAiNN",
+    "script": "align_painn_model.py",
+    "status": "PASS",
+    "mae": 1.583248e-08,
+    "rmse": 2.485079e-08,
+    "max_abs": 5.960464e-08,
+    "error": ""
+  },
+  {
+    "model": "RGCN",
+    "script": "align_rgcn_model.py",
+    "status": "PASS",
+    "mae": 3.72529e-09,
+    "rmse": 1.053671e-08,
+    "max_abs": 2.980232e-08,
+    "error": ""
+  },
+  {
+    "model": "rGIN",
+    "script": "align_rgin_model.py",
+    "status": "PASS",
+    "mae": 1.769513e-08,
+    "rmse": 1.881179e-08,
+    "max_abs": 2.980232e-08,
+    "error": ""
+  },
+  {
+    "model": "SchNet",
+    "script": "align_schnet_model.py",
+    "status": "PASS",
+    "mae": 3.72529e-09,
+    "rmse": 8.686799e-09,
+    "max_abs": 2.421439e-08,
+    "error": ""
+  }
+]

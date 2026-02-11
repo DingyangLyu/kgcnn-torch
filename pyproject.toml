@@ -13,12 +13,23 @@ dependencies = [
     "torch>=2.0",
     "torch_geometric>=2.4",
     "numpy>=1.22",
+    "pandas>=1.4",
+    "scipy>=1.7",
+    "networkx>=2.6",
+    "requests",
 ]
 
 [project.optional-dependencies]
-molecule = ["rdkit"]
-crystal = ["pymatgen"]
-all = ["rdkit", "pymatgen"]
+molecule = ["rdkit", "openbabel-wheel", "ase"]
+crystal = ["pymatgen", "pyxtal"]
+vis = ["matplotlib>=3.5"]
+extras = ["scikit-learn>=1.0", "pyyaml>=6.0"]
+all = [
+    "rdkit", "openbabel-wheel", "ase",
+    "pymatgen", "pyxtal",
+    "matplotlib>=3.5",
+    "scikit-learn>=1.0", "pyyaml>=6.0",
+]
 dev = ["pytest>=7.0", "pytest-cov"]
 
 [tool.setuptools.packages.find]

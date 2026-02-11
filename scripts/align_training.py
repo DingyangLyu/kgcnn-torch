@@ -959,6 +959,7 @@ def test_rgcn():
         node_pooling="sum",
         output_units=cfg.output_units,
         output_activation=cfg.output_activation,
+        output_final_activation=cfg.output_final_activation,
         num_targets=cfg.num_targets, output_embedding="graph",
         use_node_embedding=True, num_embeddings=cfg.num_embeddings,
     )
@@ -1014,6 +1015,7 @@ def test_gnnfilm():
         node_pooling="sum",
         output_units=cfg.output_units,
         output_activation=cfg.output_activation,
+        output_final_activation=cfg.output_final_activation,
         num_targets=cfg.num_targets, output_embedding="graph",
         use_node_embedding=True, num_embeddings=cfg.num_embeddings,
     )

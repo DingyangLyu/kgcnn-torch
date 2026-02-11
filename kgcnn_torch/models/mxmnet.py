@@ -274,27 +274,17 @@ class MXMNetLocalMP(nn.Module):
         m_kj = m_kj * w_rbf1  # (M, units)
 
         # Gather m_kj for angle pairs.
-        # In Keras: GatherNodesOutgoing()([m_kj, angle_idx_1])
-        # GatherNodesOutgoing gathers at send index (index 1 in Keras).
-        # In our angle index convention (2, K), angle_idx_1[0] = receive, angle_idx_1[1] = send.
-        # But angle indices reference edges (not nodes).
-        # Keras GatherNodesOutgoing uses selection_index=1 (send) by default.
-        # For angle context: this gathers the edge feature at the "outgoing" edge index.
-        # In the Keras code: angle_idx stores edge indices and
-        # GatherNodesOutgoing gathers m_kj[angle_idx_1[1]].
-        # In our PyG convention for angle_index: angle_index[0] = source edge, angle_index[1] = target edge.
-        # The Keras gather picks index 1 (send), which in Keras convention is the source/outgoing.
-        # To match: we gather at angle_idx_1[0] (source in PyG = send/outgoing in Keras).
-        m_kj_angle = m_kj[angle_idx_1[0]]  # (K1, units)
+        # Convention: angle_idx = [ji, kj] (DimeNetPP/Keras convention).
+        # Keras GatherNodesOutgoing gathers at index 1 (send/outgoing = kj).
+        m_kj_angle = m_kj[angle_idx_1[1]]  # (K1, units)
 
         # Weight by spherical basis features.
         sw_sbf1 = self.mlp_sbf1(sbf1)  # (K1, units)
         m_kj_angle = m_kj_angle * sw_sbf1  # (K1, units)
 
         # Aggregate back to edges.
-        # In Keras: pool_mkj([m, m_kj, angle_idx_1]) pools m_kj to receiving index.
-        # Keras receive index = angle_idx_1[0]. In PyG convention = angle_idx_1[1] (target).
-        m_kj_agg = self.pool_mkj(m_kj_angle, angle_idx_1[1], num_edges)  # (M, units)
+        # Keras PoolingLocalMessages pools to index 0 (receive = ji).
+        m_kj_agg = self.pool_mkj(m_kj_angle, angle_idx_1[0], num_edges)  # (M, units)
 
         # Direct path.
         m_ji_1 = self.mlp_ji_1(m)  # (M, units)
@@ -306,15 +296,15 @@ class MXMNetLocalMP(nn.Module):
         w_rbf2 = self.lin_rbf2(rbf)  # (M, units)
         m_jj = m_jj * w_rbf2  # (M, units)
 
-        # Gather for angle set 2.
-        m_jj_angle = m_jj[angle_idx_2[0]]  # (K2, units)
+        # Gather for angle set 2 (at index 1 = kj).
+        m_jj_angle = m_jj[angle_idx_2[1]]  # (K2, units)
 
         # Weight by spherical basis features set 2.
         sw_sbf2 = self.mlp_sbf2(sbf2)  # (K2, units)
         m_jj_angle = m_jj_angle * sw_sbf2  # (K2, units)
 
-        # Aggregate back to edges.
-        m_jj_agg = self.pool_mjj(m_jj_angle, angle_idx_2[1], num_edges)  # (M, units)
+        # Aggregate back to edges (pool to index 0 = ji).
+        m_jj_agg = self.pool_mjj(m_jj_angle, angle_idx_2[0], num_edges)  # (M, units)
 
         # Direct path.
         m_ji_2 = self.mlp_ji_2(m)  # (M, units)

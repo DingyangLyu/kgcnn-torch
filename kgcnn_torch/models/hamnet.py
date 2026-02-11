@@ -35,7 +35,8 @@ class HamNaiveDynMessage(nn.Module):
     """
 
     def __init__(self, units: int, edge_dim: int,
-                 activation: str = "leaky_relu2", activation_last: str = "elu"):
+                 activation: str = "leaky_relu2", activation_last: str = "elu",
+                 use_dropout: bool = False, dropout_rate: float = 0.5):
         """Initialize HamNaiveDynMessage.
 
         Args:
@@ -43,8 +44,11 @@ class HamNaiveDynMessage(nn.Module):
             edge_dim: Dimension of edge features.
             activation: Activation function for attend and edge transforms.
             activation_last: Final activation for node messages (Keras default: elu).
+            use_dropout: Whether to apply dropout on node and edge messages.
+            dropout_rate: Dropout rate (only used when use_dropout=True).
         """
         super().__init__()
+        self.use_dropout = use_dropout
         # Attention alignment: projects [p_ij(3) || q_ij(3) || e_ij(edge_dim)] -> 1
         self.align_dense = nn.Linear(3 + 3 + edge_dim, 1)
         # Attended node transform with activation (Keras: Dense(units, activation=activation))
@@ -58,6 +62,8 @@ class HamNaiveDynMessage(nn.Module):
         self.final_activ = get_activation(activation_last)
         # Keras kgcnn.layers.aggr.AggregateLocalEdgesAttention defaults normalize_softmax=False.
         self.aggr_attention = AggregateLocalEdgesAttention(normalize_softmax=False)
+        if use_dropout:
+            self.dropout_layer = nn.Dropout(p=dropout_rate)
 
     def forward(self, h: torch.Tensor, p: torch.Tensor, q: torch.Tensor,
                 e: torch.Tensor, edge_index: torch.Tensor,
@@ -107,6 +113,11 @@ class HamNaiveDynMessage(nn.Module):
         # Edge message
         edge_input = torch.cat([h_i, p_ij, q_ij, h_j], dim=-1)  # (M, units+6+units)
         edge_msg = self.activation(self.edge_dense(edge_input))  # (M, edge_dim)
+
+        # Apply dropout if enabled (matching Keras HamNaiveDynMessage use_dropout)
+        if self.use_dropout:
+            node_msg = self.dropout_layer(node_msg)
+            edge_msg = self.dropout_layer(edge_msg)
 
         return node_msg, edge_msg
 
@@ -159,7 +170,8 @@ class HamNetFingerprintGenerator(nn.Module):
     def __init__(self, units: int, fingerprint_dim: int, depth: int = 2,
                  activation: str = "leaky_relu2", activation_context: str = "leaky_relu2",
                  activation_last: str = "elu",
-                 pooling_method: str = "mean"):
+                 pooling_method: str = "mean",
+                 use_dropout: bool = False, dropout_rate: float = 0.5):
         """Initialize HamNetFingerprintGenerator.
 
         Args:
@@ -170,9 +182,14 @@ class HamNetFingerprintGenerator(nn.Module):
             activation_context: Activation after GRU update (Keras: leaky_relu2).
             activation_last: Activation for attention output (Keras: elu).
             pooling_method: Pooling method for initial state.
+            use_dropout: Whether to apply dropout on attend and align features.
+            dropout_rate: Dropout rate (only used when use_dropout=True).
         """
         super().__init__()
         self.depth = depth
+        self.use_dropout = use_dropout
+        if use_dropout:
+            self.dropout_layer = nn.Dropout(p=dropout_rate)
 
         # Initial state transform (Keras: vertex2mol = Dense(units, activation=activation))
         self.init_dense = nn.Sequential(
@@ -221,6 +238,8 @@ class HamNetFingerprintGenerator(nn.Module):
         for i in range(self.depth):
             # Per-depth attend transform (Keras: separate per depth)
             attend = self.attend_denses[i](h)  # (N, fingerprint_dim)
+            if self.use_dropout:
+                attend = self.dropout_layer(attend)
 
             # Broadcast graph state to nodes
             s_broadcast = s[batch]  # (N, fingerprint_dim)
@@ -228,6 +247,8 @@ class HamNetFingerprintGenerator(nn.Module):
             # Alignment: Dense([s_broadcast || h_v]) -> 1 (Keras: linear activation)
             align_input = torch.cat([s_broadcast, h], dim=-1)  # (N, fingerprint_dim + units)
             align = self.align_denses[i](align_input)  # (N, 1)
+            if self.use_dropout:
+                align = self.dropout_layer(align)
 
             # Attention-weighted pooling
             m = self.pool_attentions[i](attend, align, batch, batch_size)  # (B, fingerprint_dim)

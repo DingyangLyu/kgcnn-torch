@@ -46,6 +46,7 @@ class Config:
     num_embeddings: int = 95
     output_units: list = None
     output_activation: str = "relu"
+    output_final_activation: str = "linear"  # alignment uses linear; Keras literature default is "softmax"
     n_nodes: int = 20
     n_edges: int = 60
     batch_size: int = 4
@@ -98,7 +99,7 @@ class KerasGNNFilmFullStack:
         self.pooling = KerasPoolingNodes(pooling_method="scatter_sum")
 
         out_units = cfg.output_units + [cfg.num_targets]
-        out_act = [cfg.output_activation] * len(cfg.output_units) + ["linear"]
+        out_act = [cfg.output_activation] * len(cfg.output_units) + [cfg.output_final_activation]
         self.output_mlp = KerasMLP(
             units=out_units,
             activation=out_act,
@@ -172,6 +173,7 @@ def main():
         node_pooling="sum",
         output_units=cfg.output_units,
         output_activation=cfg.output_activation,
+        output_final_activation=cfg.output_final_activation,
         num_targets=cfg.num_targets,
         output_embedding="graph",
         use_node_embedding=True,

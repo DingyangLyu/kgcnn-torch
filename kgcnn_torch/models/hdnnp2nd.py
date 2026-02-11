@@ -361,7 +361,9 @@ class HDNNP2ndModel(nn.Module):
                  output_units: list = None,
                  output_activation: str = "linear",
                  num_targets: int = 1,
-                 output_embedding: str = "graph"):
+                 output_embedding: str = "graph",
+                 predict_dipole: bool = False,
+                 has_charge_input: bool = False):
         super().__init__()
 
         if element_types is None:
@@ -375,6 +377,8 @@ class HDNNP2ndModel(nn.Module):
 
         self.output_embedding = output_embedding
         self.use_output_mlp = use_output_mlp
+        self.predict_dipole = predict_dipole
+        self.has_charge_input = has_charge_input
         self.element_types = sorted(element_types)
         self.n_types = len(self.element_types)
         self.cutoff = cutoff
@@ -439,6 +443,11 @@ class HDNNP2ndModel(nn.Module):
             # Keras: no output MLP at all when use_output_mlp=False.
             self.output_mlp = None
 
+        # Dipole prediction layers (matching Keras predict_dipole).
+        if predict_dipole:
+            self.charge_dense = nn.Linear(relational_units[-1], 1)
+            self.dipole_pooling = PoolingNodes(pooling_method="sum")
+
     def forward(self, data) -> torch.Tensor:
         """Forward pass.
 
@@ -447,7 +456,9 @@ class HDNNP2ndModel(nn.Module):
                 angle_index, and batch.
 
         Returns:
-            Graph-level predictions of shape (B, num_targets).
+            Graph-level predictions of shape (B, num_targets), or a tuple
+            (energy, dipole) or (energy, dipole, total_charge) when
+            predict_dipole=True.
         """
         z = data.z
         pos = data.pos
@@ -489,6 +500,26 @@ class HDNNP2ndModel(nn.Module):
         # The imported RelationalMLP takes (x, relations, batch, batch_size).
         n = self.relational_mlp(rep, type_map, batch, batch_size)  # (N, relational_units[-1])
 
+        # Dipole prediction from partial charges (matching Keras predict_dipole).
+        dipole_out = None
+        total_charge_out = None
+        if self.predict_dipole:
+            pc = self.charge_dense(n)  # (N, 1) partial charges
+            tc = self.dipole_pooling(pc, batch, batch_size)  # (B, 1) total charge
+
+            if self.has_charge_input:
+                tot_charge = data.total_charge  # (B, 1) true total charge
+                charge_diff = tot_charge - tc  # (B, 1)
+                count_nodes = torch.zeros(batch_size, dtype=batch.dtype, device=batch.device)
+                count_nodes.scatter_add_(0, batch, torch.ones_like(batch))
+                avg_correction = charge_diff / count_nodes.unsqueeze(-1).float()  # (B, 1)
+                pc = pc + avg_correction[batch]  # (N, 1)
+
+            p_dip = pc * pos  # (N, 3)
+            dipole_out = self.dipole_pooling(p_dip, batch, batch_size)  # (B, 3)
+            if not self.has_charge_input:
+                total_charge_out = tc  # (B, 1)
+
         # Graph-level pooling (sum of per-atom energies).
         if self.output_embedding == "graph":
             out = self.pooling(n, batch, batch_size)  # (B, relational_units[-1])
@@ -498,6 +529,11 @@ class HDNNP2ndModel(nn.Module):
         if self.output_mlp is not None:
             out = self.output_mlp(out)
 
+        if self.predict_dipole:
+            outputs = (out, dipole_out)
+            if total_charge_out is not None:
+                outputs = outputs + (total_charge_out,)
+            return outputs
         return out
 
 
@@ -563,7 +599,9 @@ class HDNNP2ndBehlerModel(nn.Module):
                  output_units: list = None,
                  output_activation: str = "linear",
                  num_targets: int = 1,
-                 output_embedding: str = "graph"):
+                 output_embedding: str = "graph",
+                 predict_dipole: bool = False,
+                 has_charge_input: bool = False):
         super().__init__()
 
         if element_types is None:
@@ -584,6 +622,8 @@ class HDNNP2ndBehlerModel(nn.Module):
             g4_lamda = [-1.0, 1.0]
 
         self.output_embedding = output_embedding
+        self.predict_dipole = predict_dipole
+        self.has_charge_input = has_charge_input
         self.element_types = sorted(element_types)
         self.n_types = len(self.element_types)
         self.g2_rc = g2_rc
@@ -647,6 +687,11 @@ class HDNNP2ndBehlerModel(nn.Module):
             input_dim=pool_out_dim,
             activation=out_act,
         )
+
+        # Dipole prediction layers (matching Keras predict_dipole).
+        if predict_dipole:
+            self.charge_dense = nn.Linear(relational_units[-1], 1)
+            self.dipole_pooling = PoolingNodes(pooling_method="sum")
 
     def _compute_g2(self, z, pos, edge_index):
         """Compute G2 radial symmetry functions.
@@ -774,6 +819,26 @@ class HDNNP2ndBehlerModel(nn.Module):
 
         n = self.relational_mlp(rep, type_map, batch, batch_size)
 
+        # Dipole prediction from partial charges (matching Keras predict_dipole).
+        dipole_out = None
+        total_charge_out = None
+        if self.predict_dipole:
+            pc = self.charge_dense(n)  # (N, 1) partial charges
+            tc = self.dipole_pooling(pc, batch, batch_size)  # (B, 1) total charge
+
+            if self.has_charge_input:
+                tot_charge = data.total_charge  # (B, 1) true total charge
+                charge_diff = tot_charge - tc  # (B, 1)
+                count_nodes = torch.zeros(batch_size, dtype=batch.dtype, device=batch.device)
+                count_nodes.scatter_add_(0, batch, torch.ones_like(batch))
+                avg_correction = charge_diff / count_nodes.unsqueeze(-1).float()  # (B, 1)
+                pc = pc + avg_correction[batch]  # (N, 1)
+
+            p_dip = pc * pos  # (N, 3)
+            dipole_out = self.dipole_pooling(p_dip, batch, batch_size)  # (B, 3)
+            if not self.has_charge_input:
+                total_charge_out = tc  # (B, 1)
+
         if self.output_embedding == "graph":
             out = self.pooling(n, batch, batch_size)
         else:
@@ -781,6 +846,11 @@ class HDNNP2ndBehlerModel(nn.Module):
 
         out = self.output_mlp(out)
 
+        if self.predict_dipole:
+            outputs = (out, dipole_out)
+            if total_charge_out is not None:
+                outputs = outputs + (total_charge_out,)
+            return outputs
         return out
 
 
@@ -822,7 +892,9 @@ class HDNNP2ndAtomWiseModel(nn.Module):
                  output_units: list = None,
                  output_activation: str = "linear",
                  num_targets: int = 1,
-                 output_embedding: str = "graph"):
+                 output_embedding: str = "graph",
+                 predict_dipole: bool = False,
+                 has_charge_input: bool = False):
         super().__init__()
 
         if element_types is None:
@@ -833,6 +905,8 @@ class HDNNP2ndAtomWiseModel(nn.Module):
             relational_activation = ["swish", "swish", "linear"]
 
         self.output_embedding = output_embedding
+        self.predict_dipole = predict_dipole
+        self.has_charge_input = has_charge_input
         self.element_types = sorted(element_types)
         self.n_types = len(self.element_types)
 
@@ -866,14 +940,22 @@ class HDNNP2ndAtomWiseModel(nn.Module):
             activation=out_act,
         )
 
+        # Dipole prediction layers (matching Keras predict_dipole).
+        if predict_dipole:
+            self.charge_dense = nn.Linear(relational_units[-1], 1)
+            self.dipole_pooling = PoolingNodes(pooling_method="sum")
+
     def forward(self, data) -> torch.Tensor:
         """Forward pass.
 
         Args:
-            data: PyG Data batch object with z, x (pre-computed representations), batch.
+            data: PyG Data batch object with z, x (pre-computed representations),
+                batch, and optionally pos (required when predict_dipole=True).
 
         Returns:
-            Graph-level predictions of shape (B, num_targets).
+            Graph-level predictions of shape (B, num_targets), or a tuple
+            (energy, dipole) or (energy, dipole, total_charge) when
+            predict_dipole=True.
         """
         z = data.z
         x = data.x
@@ -885,6 +967,27 @@ class HDNNP2ndAtomWiseModel(nn.Module):
         # Apply element-specific MLP.
         n = self.relational_mlp(x, type_map, batch, batch_size)
 
+        # Dipole prediction from partial charges (matching Keras predict_dipole).
+        dipole_out = None
+        total_charge_out = None
+        if self.predict_dipole:
+            pos = data.pos  # (N, 3)
+            pc = self.charge_dense(n)  # (N, 1) partial charges
+            tc = self.dipole_pooling(pc, batch, batch_size)  # (B, 1) total charge
+
+            if self.has_charge_input:
+                tot_charge = data.total_charge  # (B, 1) true total charge
+                charge_diff = tot_charge - tc  # (B, 1)
+                count_nodes = torch.zeros(batch_size, dtype=batch.dtype, device=batch.device)
+                count_nodes.scatter_add_(0, batch, torch.ones_like(batch))
+                avg_correction = charge_diff / count_nodes.unsqueeze(-1).float()  # (B, 1)
+                pc = pc + avg_correction[batch]  # (N, 1)
+
+            p_dip = pc * pos  # (N, 3)
+            dipole_out = self.dipole_pooling(p_dip, batch, batch_size)  # (B, 3)
+            if not self.has_charge_input:
+                total_charge_out = tc  # (B, 1)
+
         # Graph-level pooling.
         if self.output_embedding == "graph":
             out = self.pooling(n, batch, batch_size)
@@ -893,4 +996,9 @@ class HDNNP2ndAtomWiseModel(nn.Module):
 
         out = self.output_mlp(out)
 
+        if self.predict_dipole:
+            outputs = (out, dipole_out)
+            if total_charge_out is not None:
+                outputs = outputs + (total_charge_out,)
+            return outputs
         return out

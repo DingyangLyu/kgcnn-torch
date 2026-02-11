@@ -124,6 +124,7 @@ def main():
         film_pooling="sum",
         output_units=[],
         output_activation="linear",
+        output_final_activation="linear",
         num_targets=1,
         output_embedding="node",
         use_node_embedding=False,

@@ -91,7 +91,17 @@ class AttentionHeadGATV2(nn.Module):
         self.units = units
 
         self.linear_trafo = nn.Linear(in_features, units, bias=use_bias)
-        concat_dim = 2 * in_features + (edge_dim if use_edge_features else 0)
+        # Handle edge_dim=0 with LazyLinear fallback (like GAT)
+        self.edge_proj = None
+        if use_edge_features:
+            if edge_dim and edge_dim > 0:
+                self._effective_edge_dim = edge_dim
+            else:
+                self._effective_edge_dim = units
+                self.edge_proj = nn.LazyLinear(units)
+        else:
+            self._effective_edge_dim = 0
+        concat_dim = 2 * in_features + (self._effective_edge_dim if use_edge_features else 0)
         self.alpha_activation = nn.Sequential(
             nn.Linear(concat_dim, units, bias=use_bias),
             get_activation(activation)
@@ -122,6 +132,8 @@ class AttentionHeadGATV2(nn.Module):
         wn_j = gather_nodes_outgoing(w_n, edge_index)
 
         if self.use_edge_features and edge_attr is not None:
+            if self.edge_proj is not None:
+                edge_attr = self.edge_proj(edge_attr)
             e_ij = torch.cat([n_i, n_j, edge_attr], dim=-1)
         else:
             e_ij = torch.cat([n_i, n_j], dim=-1)
@@ -158,7 +170,17 @@ class MultiHeadGATV2Layer(nn.Module):
         self.use_final_activation = use_final_activation
         self.units = units
 
-        concat_dim = 2 * in_features + (edge_dim if use_edge_features else 0)
+        # Handle edge_dim=0 with LazyLinear fallback (like GAT)
+        self.edge_proj = None
+        if use_edge_features:
+            if edge_dim and edge_dim > 0:
+                self._effective_edge_dim = edge_dim
+            else:
+                self._effective_edge_dim = units
+                self.edge_proj = nn.LazyLinear(units)
+        else:
+            self._effective_edge_dim = 0
+        concat_dim = 2 * in_features + (self._effective_edge_dim if use_edge_features else 0)
 
         self.head_linears = nn.ModuleList()
         self.head_alpha_acts = nn.ModuleList()
@@ -206,7 +228,8 @@ class MultiHeadGATV2Layer(nn.Module):
             wn_j = gather_nodes_outgoing(w_n, edge_index)
 
             if self.use_edge_features and edge_attr is not None:
-                e_ij = torch.cat([n_i, n_j, edge_attr], dim=-1)
+                ea = self.edge_proj(edge_attr) if self.edge_proj is not None else edge_attr
+                e_ij = torch.cat([n_i, n_j, ea], dim=-1)
             else:
                 e_ij = torch.cat([n_i, n_j], dim=-1)
 

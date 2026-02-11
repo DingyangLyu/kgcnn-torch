@@ -1,6 +1,5 @@
 import time
-import keras as ks
-from keras import ops
+import torch
 import numpy as np
 from typing import Union, List, Callable, Dict
 from kgcnn_torch.data.base import MemoryGraphList
@@ -9,14 +8,14 @@ from kgcnn_torch.utils.serial import deserialize, serialize
 
 
 class MolDynamicsModelPredictor:
-    r"""Model predictor class that adds pre- and postprocessors to the keras model to be able to add transformation
+    r"""Model predictor class that adds pre- and postprocessors to the PyTorch model to be able to add transformation
     steps to convert for example input and output representations to fit MD programs like :obj:`ase` .
     The :obj:`MolDynamicsModelPredictor` receives a :obj:`MemoryGraphList` in call and returns a
     :obj:`MemoryGraphList` .
     """
 
     def __init__(self,
-                 model: ks.models.Model = None,
+                 model: torch.nn.Module = None,
                  model_inputs: Union[list, dict] = None,
                  model_outputs: Union[list, dict] = None,
                  graph_preprocessors: List[Callable] = None,
@@ -33,9 +32,9 @@ class MolDynamicsModelPredictor:
         r"""Initialize :obj:`MolDynamicsModelPredictor` class.
 
         Args:
-            model (tf.keras.Model): Single trained keras model.
+            model (torch.nn.Module): Single trained PyTorch model.
             model_inputs (list, dict): List or single dictionary for model inputs.
-            model_outputs (list, dict): List of model output names or dictionary of output mappings from keras model
+            model_outputs (list, dict): List of model output names or dictionary of output mappings from model
                 output to the names in the return :obj:`GraphDict` .
             graph_preprocessors (list): List of graph preprocessors, see :obj:`kgcnn_torch.graph.preprocessor` .
             graph_postprocessors (list): List of graph postprocessors, see :obj:`kgcnn_torch.graph.postprocessor` .
@@ -147,7 +146,7 @@ class MolDynamicsModelPredictor:
         output_list = []
         for i in range(num_samples):
             temp_dict = {
-                key: ops.convert_to_numpy(value[i]) for key, value in tensor_dict.items()
+                key: value[i].detach().cpu().numpy() if isinstance(value[i], torch.Tensor) else np.asarray(value[i]) for key, value in tensor_dict.items()
             }
             temp_dict = GraphDict(temp_dict)
             for mp in self.graph_postprocessors:

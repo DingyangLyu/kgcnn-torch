@@ -6,11 +6,10 @@ architecture (EmbeddingDimeBlock + BesselBasisLayer + SphericalBasisLayer +
 MLP projections + (GlobalMP + LocalMP)×depth + PoolingNodes + output MLP),
 transfers ALL weights, and verifies final output.
 
-NOTE: The LocalMP is implemented manually in the Keras stack to handle the
-angle_index convention difference: Torch MXMNet uses [source_edge, target_edge]
-for angle indices, while Keras layers expect [receive, send]. The
-SphericalBasisLayer always gathers at angle_index[1], so we share the same
-angle_index (no flip) and implement LocalMP gather/pool manually.
+NOTE: Both Torch MXMNetLocalMP and Keras MXMLocalMP now use the same
+DimeNetPP angle convention: angle_index = [ji, kj]. Both gather at index [1]
+(kj / send) and pool at index [0] (ji / receive). The LocalMP is implemented
+manually in the Keras stack to keep weight transfer explicit.
 """
 import os
 import sys
@@ -77,12 +76,11 @@ class Config:
             self.output_units = []
 
 
-def generate_angle_index_mxmnet(edge_index_torch):
-    """Generate angle indices for MXMNet from Torch edge_index [src, dst].
+def generate_angle_index(edge_index_torch):
+    """Generate DimeNetPP-style angle indices from edge_index [src, dst].
 
-    MXMNet Torch convention: angle_index[0] = source edge, angle_index[1] = target edge.
-    For each edge e_ji (src=j, dst=i), find edges e_kj (dst=j) that share node j.
-    Returns: (2, K) with [source_edge_kj, target_edge_ji].
+    For each edge ji (src[p]=j, dst[p]=i), find all edges kj (dst[q]=j)
+    that share node j. Returns (2, K): [ji_edge_idx, kj_edge_idx].
     """
     src = edge_index_torch[0]
     dst = edge_index_torch[1]
@@ -95,23 +93,24 @@ def generate_angle_index_mxmnet(edge_index_torch):
             node_to_incoming[d] = []
         node_to_incoming[d].append(q)
 
-    source_list, target_list = [], []
+    ji_list, kj_list = [], []
     for p in range(M):
         j = src[p].item()
         if j in node_to_incoming:
             for q in node_to_incoming[j]:
                 if q != p:
-                    source_list.append(q)   # kj edge (source edge in angle pair)
-                    target_list.append(p)    # ji edge (target edge in angle pair)
+                    ji_list.append(p)    # ji edge (receive)
+                    kj_list.append(q)    # kj edge (send)
 
-    return torch.tensor([source_list, target_list], dtype=torch.long)
+    return torch.tensor([ji_list, kj_list], dtype=torch.long)
 
 
 class KerasLocalMPBlock:
     """Manual Keras LocalMP block matching Torch MXMNetLocalMP convention.
 
-    Gathers at angle_index[0] (source edge) and aggregates to angle_index[1]
-    (target edge), matching the Torch convention directly.
+    Uses DimeNetPP angle convention: angle_index = [ji, kj].
+    Gathers at angle_index[1] (kj / send) and pools to angle_index[0]
+    (ji / receive), matching both Torch and Keras MXMLocalMP.
     """
 
     def __init__(self, units, output_units, activation, pooling_method="sum"):
@@ -143,7 +142,7 @@ class KerasLocalMPBlock:
             rbf: Projected RBF features (M, units).
             sbf1, sbf2: Projected SBF features (K, units).
             edge_index_keras: (2, M) Keras convention [target, source].
-            angle_idx_1, angle_idx_2: (2, K) Torch convention [source_edge, target_edge].
+            angle_idx_1, angle_idx_2: (2, K) DimeNetPP convention [ji, kj].
         """
         num_nodes = h.shape[0]
         num_edges = edge_index_keras.shape[1]
@@ -161,14 +160,14 @@ class KerasLocalMPBlock:
         w_rbf1 = self.lin_rbf1(rbf)
         m_kj = m_kj * w_rbf1
 
-        # Gather at angle_idx_1[0] (source edge in Torch convention)
-        m_kj_angle = ops.take(m_kj, angle_idx_1[0], axis=0)
+        # Gather at angle_idx_1[1] (kj / send edge)
+        m_kj_angle = ops.take(m_kj, angle_idx_1[1], axis=0)
         sw_sbf1 = self.mlp_sbf1(sbf1)
         m_kj_angle = m_kj_angle * sw_sbf1
 
-        # Aggregate to angle_idx_1[1] (target edge in Torch convention)
+        # Aggregate to angle_idx_1[0] (ji / receive edge)
         m_kj_agg = scatter_reduce_sum(
-            angle_idx_1[1], m_kj_angle, (num_edges, self.dim))
+            angle_idx_1[0], m_kj_angle, (num_edges, self.dim))
 
         m_ji_1 = self.mlp_ji_1(m)
         m = m_ji_1 + m_kj_agg
@@ -178,12 +177,12 @@ class KerasLocalMPBlock:
         w_rbf2 = self.lin_rbf2(rbf)
         m_jj = m_jj * w_rbf2
 
-        m_jj_angle = ops.take(m_jj, angle_idx_2[0], axis=0)
+        m_jj_angle = ops.take(m_jj, angle_idx_2[1], axis=0)
         sw_sbf2 = self.mlp_sbf2(sbf2)
         m_jj_angle = m_jj_angle * sw_sbf2
 
         m_jj_agg = scatter_reduce_sum(
-            angle_idx_2[1], m_jj_angle, (num_edges, self.dim))
+            angle_idx_2[0], m_jj_angle, (num_edges, self.dim))
 
         m_ji_2 = self.mlp_ji_2(m)
         m = m_ji_2 + m_jj_agg
@@ -280,8 +279,7 @@ class KerasMXMNetFullStack:
 
         Args:
             edge_index_keras: (2, M) Keras convention [target, source].
-            angle_idx_1, angle_idx_2: (2, K) Torch convention [source_edge, target_edge].
-                Same angle_index as Torch (NOT flipped).
+            angle_idx_1, angle_idx_2: (2, K) DimeNetPP convention [ji, kj].
         """
         n = self.node_embedding(z)
 
@@ -436,8 +434,8 @@ def main():
         include_pos=True, include_edge_attr=False,
     )
 
-    # Generate angle indices in MXMNet Torch convention [source_edge, target_edge]
-    angle_idx = generate_angle_index_mxmnet(torch_data.edge_index)
+    # Generate angle indices in DimeNetPP convention [ji, kj]
+    angle_idx = generate_angle_index(torch_data.edge_index)
     # Use same angle_index for both sets
     torch_data.angle_index_1 = angle_idx
     torch_data.angle_index_2 = angle_idx

@@ -10,13 +10,17 @@ class GraphBatchNorm(nn.Module):
     Wraps standard ``nn.BatchNorm1d`` to match the Keras
     ``GraphBatchNormalization`` behaviour, which computes global statistics
     over all nodes in the disjoint batch (i.e. standard batch normalisation).
-    The ``batch`` / ``batch_size`` arguments are accepted for API
-    compatibility but are not used.
+
+    When ``padded_disjoint=True``, a mask (``batch > 0``) is applied so that
+    dummy padding nodes are excluded from the batch-norm statistics and their
+    output is zeroed, matching the Keras implementation.
     """
 
     def __init__(self, num_features: int, eps: float = 1e-3,
-                 momentum: float = 0.01, affine: bool = True):
+                 momentum: float = 0.01, affine: bool = True,
+                 padded_disjoint: bool = False):
         super().__init__()
+        self.padded_disjoint = padded_disjoint
         self.bn = nn.BatchNorm1d(num_features, eps=eps, momentum=momentum,
                                  affine=affine)
 
@@ -26,12 +30,19 @@ class GraphBatchNorm(nn.Module):
 
         Args:
             x: Node features of shape (N, F).
-            batch: Unused. Kept for API compatibility.
-            batch_size: Unused. Kept for API compatibility.
+            batch: Batch assignment of shape (N,). Used for padded_disjoint masking.
+            batch_size: Number of graphs. Kept for API compatibility.
 
         Returns:
             Normalized features of shape (N, F).
         """
+        if self.padded_disjoint and batch is not None:
+            mask = (batch > 0)  # (N,) bool — True for real nodes
+            x_valid = x[mask]
+            x_valid = self.bn(x_valid)
+            out = torch.zeros_like(x)
+            out[mask] = x_valid
+            return out
         return self.bn(x)
 
 

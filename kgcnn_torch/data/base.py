@@ -563,7 +563,7 @@ class MemoryGraphDataset(MemoryGraphList):
                  file_directory: str = None,
                  verbose: int = 10):
         super(MemoryGraphDataset, self).__init__()
-        self.logger = logging.getLogger("kgcnn.data." + dataset_name) if dataset_name is not None else module_logger
+        self.logger = logging.getLogger("kgcnn_torch.data." + dataset_name) if dataset_name is not None else module_logger
         self.logger.setLevel(verbose)
         self.data_directory = data_directory
         self.file_name = file_name

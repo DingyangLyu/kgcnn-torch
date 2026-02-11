@@ -1,5 +1,4 @@
 import ase
-import keras as ks
 import numpy as np
 from ase import Atoms
 from ase.calculators.calculator import Calculator

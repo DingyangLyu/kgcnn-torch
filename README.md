@@ -2,7 +2,7 @@
 
 基于 **PyTorch** 和 **PyTorch Geometric (PyG)** 的图神经网络库，面向分子和材料科学领域的属性预测任务。
 
-本项目从 [kgcnn](https://github.com/aimat-lab/gcnn_keras) v4.0.2（Keras 3 多后端版）完整转换而来，提供 **26 种** GNN 模型的 PyTorch 原生实现，所有模型均通过与 Keras 原始实现的数值对齐验证。
+本项目从 [kgcnn](https://github.com/aimat-lab/gcnn_keras) v4.0.2（Keras 3 多后端版）完整转换而来，提供 **28 种** GNN 模型的 PyTorch 原生实现，所有模型均通过与 Keras 原始实现的数值对齐验证（含前向传播 + 反向传播训练对齐，支持跨框架 PyTorch↔TensorFlow 验证）。
 
 ---
 
@@ -49,11 +49,11 @@
 
 ## 特性
 
-- **26 种 GNN 模型**：涵盖经典 GNN、消息传递、等变网络、注意力机制、材料科学专用模型
+- **28 种 GNN 模型**：涵盖经典 GNN、消息传递、等变网络、注意力机制、材料科学专用模型
 - **力场预测**：通过 `EnergyForceModel` 包装器，任何能量预测模型均可自动计算力 ($\vec{F}_i = -\nabla_i E$)
 - **周期性边界条件**：原生支持晶体材料（lattice + edge_image），SchNet/PAiNN/DimeNetPP 等均有 Crystal 变体
 - **完整训练管线**：内置交叉验证、早停、模型检查点、学习率调度、数据缩放
-- **与 Keras 数值对齐**：所有 26 个模型均通过逐层对齐验证（layerwise alignment），保证转换正确性
+- **与 Keras 数值对齐**：全部 28 个模型均通过前向+训练对齐验证，支持 Keras torch 后端（同框架）和 TensorFlow 后端（跨框架）双重验证
 - **PyG 生态兼容**：基于 `torch_geometric.data.Data` 标准格式，可无缝使用 PyG 数据集和 DataLoader
 
 ---
@@ -76,15 +76,25 @@ pip install -e .
 | PyTorch | >= 2.0 | 核心深度学习框架 |
 | PyTorch Geometric | >= 2.4 | 图数据处理与 DataLoader |
 | NumPy | >= 1.22 | 数值计算 |
+| pandas | >= 1.4 | 数据处理 |
+| SciPy | >= 1.7 | 科学计算（几何、多项式基函数等） |
+| NetworkX | >= 2.6 | 图操作 |
+| requests | — | 数据集下载 |
 
 ### 可选依赖
 
 ```bash
-# 分子数据处理（SMILES 解析、分子图构建等）
-pip install rdkit
+# 分子数据处理（SMILES 解析、分子图构建、分子动力学等）
+pip install -e ".[molecule]"   # rdkit, openbabel-wheel, ase
 
 # 晶体数据处理（CIF 解析、周期性图构建等）
-pip install pymatgen
+pip install -e ".[crystal]"    # pymatgen, pyxtal
+
+# 可视化
+pip install -e ".[vis]"        # matplotlib
+
+# 额外功能（数据缩放、指标、YAML 配置等）
+pip install -e ".[extras]"     # scikit-learn, pyyaml
 
 # 全部可选依赖
 pip install -e ".[all]"
@@ -525,6 +535,12 @@ history = fit(
 }
 ```
 
+**GNNFilm / RGCN 输出头激活说明**：
+
+- 两个模型均支持 `output_final_activation` 参数。
+- 默认值为 `linear`（更适配 `BCEWithLogitsLoss` / `CrossEntropyLoss` 这类 logits loss）。
+- 若你要严格复刻 Keras literature 默认行为，可显式设置 `output_final_activation: "softmax"`。
+
 **力场训练配置示例**（`hyper_md17_revised.json`）：
 
 ```json
@@ -645,7 +661,7 @@ kgcnn-torch 使用 PyG 的 `Data` 对象作为标准数据格式。内置的数�
 ```
 kgcnn-torch/
 ├── kgcnn_torch/                     # 核心库
-│   ├── models/                      # 26 个 GNN 模型 + force.py + multi.py + gnnexplain.py
+│   ├── models/                      # 28 个 GNN 模型 + force.py + multi.py + gnnexplain.py
 │   │   ├── schnet.py                #   SchNet / SchNetCrystal
 │   │   ├── painn.py                 #   PAiNN（等变消息传递）
 │   │   ├── dimenetpp.py             #   DimeNet++（方向性消息传递）
@@ -686,7 +702,7 @@ kgcnn-torch/
 │   └── utils/                       # 通用工具
 │
 ├── training_scripts/                # 训练入口脚本
-│   ├── train_graph.py               #   图级别属性预测（26 个模型）
+│   ├── train_graph.py               #   图级别属性预测（28 个模型）
 │   ├── train_force.py               #   能量/力场预测（4 个模型）
 │   ├── train_node.py                #   节点级别预测
 │   └── hyper/                       #   25+ 超参数配置文件
@@ -750,6 +766,7 @@ python scripts/smoke_all_models.py
 | 层共享 | Keras 层天然支持共享 | 需注意 `nn.Module` 引用语义 |
 | 力计算 | 自定义梯度实现 | `torch.autograd.grad` |
 | 数据集 | 30+ 内置数据集类 | 通过 PyG 数据集 + 自定义适配 |
+| GNNFilm/RGCN 输出头默认值 | literature 默认 `softmax` | 默认 `output_final_activation="linear"`；如需严格复刻可显式设 `"softmax"` |
 
 ---
 

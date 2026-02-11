@@ -35,6 +35,8 @@ class GATv2Model(nn.Module):
                  node_pooling: str = "mean",
                  output_units: list = None,
                  output_activation: str = "relu",
+                 output_use_bias: list = None,
+                 output_final_activation: str = "sigmoid",
                  num_targets: int = 1,
                  output_embedding: str = "graph",
                  use_node_embedding: bool = True,
@@ -52,6 +54,17 @@ class GATv2Model(nn.Module):
         self.use_edge_features = use_edge_features
         self.edge_dim = edge_dim
 
+        # Handle edge_dim=0 with LazyLinear fallback (like GAT)
+        self.edge_proj = None
+        if use_edge_features:
+            if edge_dim and edge_dim > 0:
+                self._effective_edge_dim = edge_dim
+            else:
+                self._effective_edge_dim = attention_units
+                self.edge_proj = nn.LazyLinear(attention_units)
+        else:
+            self._effective_edge_dim = 0
+
         self.node_input_dim = node_input_dim
         if use_node_embedding:
             self.node_embedding = nn.Embedding(num_embeddings, node_dim)
@@ -68,7 +81,7 @@ class GATv2Model(nn.Module):
             heads = nn.ModuleList([
                 AttentionHeadGATV2(
                     in_features=in_dim, units=attention_units,
-                    use_edge_features=use_edge_features, edge_dim=edge_dim,
+                    use_edge_features=use_edge_features, edge_dim=self._effective_edge_dim,
                     activation=attention_activation, use_final_activation=False
                 )
                 for _ in range(attention_heads_num)
@@ -82,14 +95,15 @@ class GATv2Model(nn.Module):
 
         final_dim = attention_units * attention_heads_num if attention_heads_concat else attention_units
         self.pooling = PoolingNodes(pooling_method=node_pooling)
+        if output_use_bias is None:
+            output_use_bias = [True] * len(output_units) + [False]
         out_units = output_units + [num_targets]
-        out_act = [output_activation] * len(output_units) + ["sigmoid"]
-        out_bias = [True] * len(output_units) + [False]
+        out_act = [output_activation] * len(output_units) + [output_final_activation]
         self.output_mlp = MLP(
             units=out_units,
             input_dim=final_dim,
             activation=out_act,
-            use_bias=out_bias
+            use_bias=output_use_bias
         )
 
     def forward(self, data) -> torch.Tensor:
@@ -104,11 +118,13 @@ class GATv2Model(nn.Module):
         batch = data.batch
 
         x = self.dense_in(x)
-        if self.use_edge_features and self.edge_dim > 0 and edge_attr is None:
+        if self.use_edge_features and edge_attr is None:
             edge_attr = torch.zeros(
-                edge_index.size(1), self.edge_dim,
+                edge_index.size(1), self._effective_edge_dim,
                 device=x.device, dtype=x.dtype
             )
+        if self.edge_proj is not None and edge_attr is not None:
+            edge_attr = self.edge_proj(edge_attr)
 
         for heads in self.attention_layers:
             head_outs = [head(x, edge_index, edge_attr) for head in heads]

@@ -38,6 +38,9 @@ class GINModel(nn.Module):
                  epsilon_learnable: bool = False,
                  use_edge_features: bool = False,
                  edge_dim: int = 0,
+                 use_edge_embedding: bool = False,
+                 num_edge_embeddings: int = 10,
+                 edge_embedding_dim: int = 64,
                  gine_activation: str = "relu",
                  node_pooling: str = "sum",
                  last_mlp_units: list = None,
@@ -65,6 +68,10 @@ class GINModel(nn.Module):
             use_edge_features: If True, use GINEConv instead of GINConv.
             edge_dim: Edge feature dimension (used only when use_edge_features=True).
                 Edge features are projected to ``units`` via a linear layer.
+            use_edge_embedding: If True, use nn.Embedding for integer edge types
+                (like bond types). Implies use_edge_features=True.
+            num_edge_embeddings: Vocabulary size for the edge embedding.
+            edge_embedding_dim: Dimension of edge embedding output.
             gine_activation: Activation used inside GINEConv.
             node_pooling: Pooling method for graph-level readout.
             last_mlp_units: Hidden dims for the per-layer readout MLP applied
@@ -89,6 +96,9 @@ class GINModel(nn.Module):
         self.output_embedding = output_embedding
         self.depth = depth
         self.use_node_embedding = use_node_embedding
+        self.use_edge_embedding = use_edge_embedding
+        if use_edge_embedding:
+            use_edge_features = True
         self.use_edge_features = use_edge_features
 
         # Node embedding
@@ -102,8 +112,12 @@ class GINModel(nn.Module):
         # Initial projection to hidden dimension
         self.dense_in = nn.Linear(node_dim, units)
 
-        # Optional edge feature projection (for GINE)
-        if use_edge_features and edge_dim > 0:
+        # Edge embedding / projection (for GINE)
+        if use_edge_embedding:
+            self.edge_embedding = nn.Embedding(num_edge_embeddings, edge_embedding_dim)
+            keras_uniform_init_embedding_(self.edge_embedding)
+            self.edge_proj = nn.Linear(edge_embedding_dim, units)
+        elif use_edge_features and edge_dim > 0:
             self.edge_proj = nn.Linear(edge_dim, units)
         else:
             self.edge_proj = None
@@ -183,7 +197,13 @@ class GINModel(nn.Module):
 
         # Edge features (for GINE)
         edge_attr = None
-        if self.use_edge_features:
+        if self.use_edge_embedding:
+            ea = data.edge_attr if hasattr(data, 'edge_attr') and data.edge_attr is not None else data.edge_type
+            if ea.dim() > 1:
+                ea = ea.squeeze(-1)
+            edge_attr = self.edge_embedding(ea.long())
+            edge_attr = self.edge_proj(edge_attr)
+        elif self.use_edge_features:
             edge_attr = data.edge_attr
             if self.edge_proj is not None:
                 edge_attr = self.edge_proj(edge_attr)
@@ -227,8 +247,8 @@ class GINModel(nn.Module):
                     out = out + h
         else:
             # Node-level output: use only the final layer embedding (matching Keras)
+            # Note: Keras does NOT apply dropout for node-level output.
             out = self.readout_mlps[-1](list_embeddings[-1])
-            out = self.readout_dropouts[-1](out)
 
         # Final output MLP
         out = self.output_mlp(out)
