@@ -19,14 +19,19 @@
         "early_stopping_patience": 100
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-4}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
         "loss": "mae"
       },
       "scheduler": {
         "class_name": "ReduceLROnPlateau",
         "patience": 50,
         "factor": 0.5,
-        "min_lr": 1e-6
+        "min_lr": 1e-06
       },
       "scaler": {
         "class_name": "ExtensiveMolecularLabelScaler"
@@ -39,7 +44,9 @@
     "data": {
       "dataset": {
         "class_name": "QM9",
-        "config": {"root": "data/"}
+        "config": {
+          "root": "data/"
+        }
       },
       "data_unit": "eV"
     }
@@ -62,7 +69,12 @@
         "early_stopping_patience": 100
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
         "loss": "mae"
       },
       "scheduler": {
@@ -82,7 +94,9 @@
     "data": {
       "dataset": {
         "class_name": "QM9",
-        "config": {"root": "data/"}
+        "config": {
+          "root": "data/"
+        }
       },
       "data_unit": "eV"
     }
@@ -113,7 +127,12 @@
         "early_stopping_patience": 100
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
         "loss": "mae"
       },
       "scheduler": {
@@ -133,7 +152,213 @@
     "data": {
       "dataset": {
         "class_name": "QM9",
-        "config": {"root": "data/"}
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "eV"
+    }
+  },
+  "Megnet": {
+    "model": {
+      "config": {
+        "model_name": "Megnet",
+        "node_dim": 16,
+        "depth": 3,
+        "set2set_channels": 16,
+        "output_dim": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 800,
+        "batch_size": 32,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.0005,
+        "learning_rate_stop": 1e-05,
+        "epo_min": 100,
+        "epo": 800
+      },
+      "scaler": {
+        "class_name": "QMGraphLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "QM9",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "eV"
+    }
+  },
+  "NMPN": {
+    "model": {
+      "config": {
+        "model_name": "NMPN",
+        "node_dim": 128,
+        "depth": 3,
+        "use_set2set": true,
+        "set2set_channels": 32,
+        "output_units": [
+          25,
+          25
+        ],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 700,
+        "batch_size": 32,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0001
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.0001,
+        "learning_rate_stop": 1e-05,
+        "epo_min": 50,
+        "epo": 700
+      },
+      "scaler": {
+        "class_name": "QMGraphLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "QM9",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "eV"
+    }
+  },
+  "MXMNet": {
+    "model": {
+      "config": {
+        "model_name": "MXMNet",
+        "node_dim": 128,
+        "depth": 6,
+        "num_radial": 16,
+        "num_spherical": 7,
+        "cutoff": 5.0,
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 900,
+        "batch_size": 128,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0001
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearWarmupExponentialDecay",
+        "lr_start": 0.0001,
+        "gamma": 0.9961697,
+        "epo_warmup": 1
+      },
+      "scaler": {
+        "class_name": "QMGraphLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "QM9",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "eV"
+    }
+  },
+  "EGNN": {
+    "model": {
+      "config": {
+        "model_name": "EGNN",
+        "num_features": 128,
+        "num_interactions": 7,
+        "output_dim": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 800,
+        "batch_size": 96,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 50,
+        "factor": 0.5,
+        "min_lr": 1e-06
+      },
+      "scaler": {
+        "class_name": "QMGraphLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "QM9",
+        "config": {
+          "root": "data/"
+        }
       },
       "data_unit": "eV"
     }

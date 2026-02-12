@@ -19,14 +19,19 @@
         "early_stopping_patience": 100
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-4}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
         "loss": "mae"
       },
       "scheduler": {
         "class_name": "ReduceLROnPlateau",
         "patience": 50,
         "factor": 0.5,
-        "min_lr": 1e-6
+        "min_lr": 1e-06
       },
       "scaler": {
         "class_name": "StandardLabelScaler"
@@ -39,7 +44,9 @@
     "data": {
       "dataset": {
         "class_name": "Lipop",
-        "config": {"root": "data/"}
+        "config": {
+          "root": "data/"
+        }
       },
       "data_unit": ""
     }
@@ -54,7 +61,10 @@
         "dropout": 0.05,
         "use_edge_features": false,
         "node_pooling": "sum",
-        "output_units": [64, 32],
+        "output_units": [
+          64,
+          32
+        ],
         "num_targets": 1
       }
     },
@@ -65,14 +75,19 @@
         "early_stopping_patience": 50
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
         "loss": "mae"
       },
       "scheduler": {
         "class_name": "ReduceLROnPlateau",
         "patience": 25,
         "factor": 0.5,
-        "min_lr": 1e-6
+        "min_lr": 1e-06
       },
       "scaler": {
         "class_name": "StandardLabelScaler"
@@ -85,7 +100,9 @@
     "data": {
       "dataset": {
         "class_name": "Lipop",
-        "config": {"root": "data/"}
+        "config": {
+          "root": "data/"
+        }
       },
       "data_unit": ""
     }
@@ -100,7 +117,10 @@
         "attention_heads_num": 10,
         "attention_heads_concat": false,
         "node_pooling": "sum",
-        "output_units": [64, 32],
+        "output_units": [
+          64,
+          32
+        ],
         "num_targets": 1
       }
     },
@@ -111,14 +131,19 @@
         "early_stopping_patience": 50
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-3}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.005
+          }
+        },
         "loss": "mae"
       },
       "scheduler": {
         "class_name": "ReduceLROnPlateau",
         "patience": 25,
         "factor": 0.5,
-        "min_lr": 1e-6
+        "min_lr": 1e-06
       },
       "scaler": {
         "class_name": "StandardLabelScaler"
@@ -131,7 +156,9 @@
     "data": {
       "dataset": {
         "class_name": "Lipop",
-        "config": {"root": "data/"}
+        "config": {
+          "root": "data/"
+        }
       },
       "data_unit": ""
     }
@@ -146,7 +173,10 @@
         "units": 128,
         "dropout": 0.1,
         "node_pooling": "sum",
-        "output_units": [64, 32],
+        "output_units": [
+          64,
+          32
+        ],
         "num_targets": 1
       }
     },
@@ -157,7 +187,12 @@
         "early_stopping_patience": 50
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
         "loss": "mae"
       },
       "scheduler": {
@@ -177,7 +212,278 @@
     "data": {
       "dataset": {
         "class_name": "Lipop",
-        "config": {"root": "data/"}
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": ""
+    }
+  },
+  "AttentiveFP": {
+    "model": {
+      "config": {
+        "model_name": "AttentiveFP",
+        "node_dim": 64,
+        "units": 200,
+        "depthato": 2,
+        "depthmol": 3,
+        "dropout": 0.2,
+        "output_units": [
+          200
+        ],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 200,
+        "batch_size": 200,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Addons>AdamW",
+          "config": {
+            "lr": 0.001,
+            "weight_decay": 1e-05
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 25,
+        "factor": 0.5,
+        "min_lr": 1e-06
+      },
+      "scaler": {
+        "class_name": "StandardScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "Lipop",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": ""
+    }
+  },
+  "PAiNN": {
+    "model": {
+      "config": {
+        "model_name": "PAiNN",
+        "num_features": 128,
+        "num_interactions": 3,
+        "cutoff": 5.0,
+        "num_gaussians": 20,
+        "output_dim": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 250,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Addons>MovingAverage",
+          "config": {
+            "lr": 0.001
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 25,
+        "factor": 0.5,
+        "min_lr": 1e-06
+      },
+      "scaler": {
+        "class_name": "StandardScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "Lipop",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": ""
+    }
+  },
+  "GATv2": {
+    "model": {
+      "config": {
+        "model_name": "GATv2",
+        "node_dim": 64,
+        "depth": 4,
+        "attention_units": 64,
+        "attention_heads_num": 10,
+        "attention_heads_concat": false,
+        "node_pooling": "sum",
+        "output_units": [
+          64,
+          32
+        ],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 500,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.0005,
+        "learning_rate_stop": 1e-05,
+        "epo_min": 250,
+        "epo": 500
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "Lipop",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": ""
+    }
+  },
+  "GCN": {
+    "model": {
+      "config": {
+        "model_name": "GCN",
+        "node_dim": 64,
+        "units": 140,
+        "depth": 5,
+        "output_units": [
+          140,
+          70
+        ],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 800,
+        "batch_size": 32,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.001,
+        "learning_rate_stop": 5e-05,
+        "epo_min": 250,
+        "epo": 800
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "Lipop",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": ""
+    }
+  },
+  "GraphSAGE": {
+    "model": {
+      "config": {
+        "model_name": "GraphSAGE",
+        "node_dim": 64,
+        "depth": 3,
+        "output_units": [
+          64,
+          32
+        ],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 500,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.0005,
+        "learning_rate_stop": 1e-05,
+        "epo_min": 400,
+        "epo": 500
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "Lipop",
+        "config": {
+          "root": "data/"
+        }
       },
       "data_unit": ""
     }

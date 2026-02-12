@@ -566,7 +566,7 @@ class CountNodesAndEdges(GraphPreProcessorBase):
     """
 
     def __init__(self, *, total_nodes: str = "total_nodes", total_edges: str = "total_edges",
-                 count_nodes: str = "node_attributes", count_edges: str = "edge_indices",
+                 count_nodes: str = "node_number", count_edges: str = "edge_indices",
                  name="count_nodes_and_edges", **kwargs):
         super().__init__(name=name, **kwargs)
         self._to_obtain.update({"count_nodes": count_nodes, "count_edges": count_edges})

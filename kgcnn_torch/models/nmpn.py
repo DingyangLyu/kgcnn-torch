@@ -21,6 +21,38 @@ from kgcnn_torch.layers.geom import GaussBasisLayer, shift_periodic_lattice
 from kgcnn_torch.layers.modules import keras_uniform_init_embedding_
 
 
+def _apply_keras_init(model: nn.Module):
+    """Apply Keras-compatible weight initialization to all layers in a model.
+
+    Keras defaults that differ from PyTorch:
+    - Dense: glorot_uniform weights, zeros biases
+    - GRUCell: glorot_uniform input weights, orthogonal recurrent weights, zeros biases
+    - LSTMCell: glorot_uniform input weights, orthogonal recurrent weights,
+                zeros biases + unit_forget_bias (forget gate bias = 1)
+
+    The orthogonal recurrent initialization is critical for RNN training stability.
+    """
+    for module in model.modules():
+        if isinstance(module, nn.Linear):
+            nn.init.xavier_uniform_(module.weight)
+            if module.bias is not None:
+                nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.GRUCell):
+            nn.init.xavier_uniform_(module.weight_ih)
+            nn.init.orthogonal_(module.weight_hh)
+            nn.init.zeros_(module.bias_ih)
+            nn.init.zeros_(module.bias_hh)
+        elif isinstance(module, nn.LSTMCell):
+            nn.init.xavier_uniform_(module.weight_ih)
+            nn.init.orthogonal_(module.weight_hh)
+            nn.init.zeros_(module.bias_ih)
+            nn.init.zeros_(module.bias_hh)
+            # unit_forget_bias: set forget gate bias to 1.0
+            # Gate order in PyTorch: input, forget, cell, output
+            hidden_size = module.hidden_size
+            module.bias_ih.data[hidden_size:2 * hidden_size].fill_(1.0)
+
+
 class TrafoEdgeNetMessages(nn.Module):
     """Transform edge network output into message matrices.
 
@@ -139,11 +171,16 @@ class NMPNModel(nn.Module):
         if use_node_embedding:
             self.node_embedding = nn.Embedding(num_embeddings, node_dim)
             keras_uniform_init_embedding_(self.node_embedding)
+            # n0 will be node_dim; dense_in maps node_dim -> units
+            dense_in_dim = node_dim
+            self._n0_dim = node_dim
         else:
-            self.node_projection = nn.Linear(node_input_dim, node_dim)
+            # Keras: n0 stays as raw input (no projection); Dense(units) maps directly.
+            dense_in_dim = node_input_dim
+            self._n0_dim = node_input_dim
 
         # Project input node features to hidden dimension
-        self.dense_in = nn.Linear(node_dim, units)
+        self.dense_in = nn.Linear(dense_in_dim, units)
 
         # Two edge networks (incoming and outgoing), each maps edge features
         # to transformation matrices of shape (units, units) via MLP + reshape.
@@ -177,9 +214,10 @@ class NMPNModel(nn.Module):
         # node features (units) are hidden state
         self.gru_update = GRUUpdate(input_dim=2 * units, hidden_dim=units)
 
-        # After message passing, concatenate initial embeddings (n0, dim=node_dim)
-        # with final embeddings (n, dim=units), giving node_dim+units.
-        concat_dim = node_dim + units
+        # After message passing, concatenate initial embeddings (n0) with final
+        # embeddings (n, dim=units). n0 dim is node_dim when using embedding,
+        # or node_input_dim when using raw features (matching Keras).
+        concat_dim = self._n0_dim + units
         if use_set2set:
             self.dense_set2set_in = nn.Linear(concat_dim, set2set_channels)
             self.pooling = PoolingSet2SetEncoder(
@@ -204,6 +242,10 @@ class NMPNModel(nn.Module):
             use_bias=out_use_bias
         )
 
+        # Apply Keras-compatible initialization (glorot_uniform for Dense,
+        # orthogonal recurrent weights for GRU/LSTM, unit_forget_bias for LSTM).
+        _apply_keras_init(self)
+
     def forward(self, data) -> torch.Tensor:
         """Forward pass.
 
@@ -222,8 +264,8 @@ class NMPNModel(nn.Module):
             z = data.z if hasattr(data, 'z') and data.z is not None else data.x
             n0 = self.node_embedding(z.long())
         else:
-            x = data.x if hasattr(data, 'x') and data.x is not None else data.z.float().unsqueeze(-1)
-            n0 = self.node_projection(x)
+            # Keras: n0 stays as raw input; no projection.
+            n0 = data.x if hasattr(data, 'x') and data.x is not None else data.z.float().unsqueeze(-1)
 
         # Project to hidden dimension; keep n0 as original embedding for skip connection
         n = self.dense_in(n0)
@@ -442,6 +484,9 @@ class NMPNCrystalModel(nn.Module):
             activation=out_act,
             use_bias=out_use_bias
         )
+
+        # Apply Keras-compatible initialization.
+        _apply_keras_init(self)
 
     def forward(self, data) -> torch.Tensor:
         """Forward pass for periodic crystal systems.

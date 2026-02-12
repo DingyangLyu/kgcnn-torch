@@ -21,7 +21,12 @@
         "force_key": "force"
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-4}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
         "loss": "energy_force",
         "energy_weight": 1.0,
         "force_weight": 100.0
@@ -30,7 +35,7 @@
         "class_name": "ReduceLROnPlateau",
         "patience": 50,
         "factor": 0.5,
-        "min_lr": 1e-7
+        "min_lr": 1e-07
       },
       "cross_validation": {
         "n_splits": 3,
@@ -67,7 +72,12 @@
         "force_key": "force"
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-4}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
         "loss": "energy_force",
         "energy_weight": 1.0,
         "force_weight": 100.0
@@ -76,7 +86,7 @@
         "class_name": "ReduceLROnPlateau",
         "patience": 50,
         "factor": 0.5,
-        "min_lr": 1e-7
+        "min_lr": 1e-07
       },
       "cross_validation": {
         "n_splits": 3,
@@ -121,7 +131,12 @@
         "force_key": "force"
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-4}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0001
+          }
+        },
         "loss": "energy_force",
         "energy_weight": 1.0,
         "force_weight": 100.0
@@ -130,7 +145,56 @@
         "class_name": "ReduceLROnPlateau",
         "patience": 50,
         "factor": 0.5,
-        "min_lr": 1e-7
+        "min_lr": 1e-07
+      },
+      "cross_validation": {
+        "n_splits": 3,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "MD17",
+        "config": {
+          "file_path": "data/md17_ethanol.kgcnn.pickle"
+        }
+      },
+      "data_unit": "kcal/mol"
+    }
+  },
+  "EGNN": {
+    "model": {
+      "config": {
+        "model_name": "EGNN",
+        "num_features": 64,
+        "num_interactions": 4,
+        "output_dim": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 1000,
+        "batch_size": 64,
+        "early_stopping_patience": 100,
+        "energy_key": "y",
+        "force_key": "force"
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
+        "loss": "energy_force",
+        "energy_weight": 1.0,
+        "force_weight": 100.0
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 50,
+        "factor": 0.5,
+        "min_lr": 1e-07
       },
       "cross_validation": {
         "n_splits": 3,

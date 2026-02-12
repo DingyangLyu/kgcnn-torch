@@ -194,7 +194,8 @@ def fit(model: nn.Module,
         early_stopping_patience: int = 0,
         checkpoint_path: str = None,
         scaler=None,
-        callbacks: list = None) -> dict:
+        callbacks: list = None,
+        compute_train_metrics: bool = False) -> dict:
     """Full training loop.
 
     Args:
@@ -213,9 +214,11 @@ def fit(model: nn.Module,
         checkpoint_path: Path to save best model checkpoint.
         scaler: Optional label scaler with inverse_transform. If provided,
             predictions and targets are inverse-transformed before computing
-            validation metrics (but loss is computed in scaled space).
+            metrics (but loss is computed in scaled space).
         callbacks: Optional list of TrainingCallback instances. Callbacks are
             invoked at training start/end, epoch start/end, and batch start/end.
+        compute_train_metrics: If True and metrics is not None, also compute
+            metrics on the training set each epoch (via an extra eval pass).
 
     Returns:
         Dict with training history.
@@ -238,6 +241,9 @@ def fit(model: nn.Module,
     if metrics:
         for name in metrics:
             history[f"val_{name}"] = []
+        if compute_train_metrics:
+            for name in metrics:
+                history[f"train_{name}"] = []
 
     best_val_loss = float('inf')
     patience_counter = 0
@@ -257,6 +263,13 @@ def fit(model: nn.Module,
         train_loss = train_epoch(model, train_loader, optimizer, loss_fn,
                                  device, callbacks=callbacks)
         history["train_loss"].append(train_loss)
+
+        # Compute training metrics via an extra eval pass
+        if compute_train_metrics and metrics:
+            train_results = eval_epoch(model, train_loader, loss_fn, device,
+                                       metrics, scaler=scaler)
+            for name in metrics:
+                history[f"train_{name}"].append(train_results.get(name, 0.0))
 
         # Get current lr
         current_lr = optimizer.param_groups[0]['lr']

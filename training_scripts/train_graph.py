@@ -103,15 +103,11 @@ _PARAM_ALIASES = {
     "GIN": {
         "dropout": "dropout_rate",
     },
-    "rGIN": {
-        "dropout": "dropout_rate",
-    },
+    "rGIN": {},
     "DMPNN": {
         "dropout": "dropout_rate",
     },
-    "CMPNN": {
-        "dropout": "dropout_rate",
-    },
+    "CMPNN": {},
     "CGCNN": {
         "node_features": "node_dim",
         "num_gaussians": "gauss_bins",
@@ -122,12 +118,21 @@ _PARAM_ALIASES = {
     "Megnet": {
         "output_dim": "num_targets",
     },
+    "AttentiveFP": {
+        "depthato": "depth_ato",
+        "depthmol": "depth_mol",
+    },
+    "GraphSAGE": {
+        "output_activation": "output_final_activation",
+    },
 }
 
 # Config keys to silently ignore (e.g., data preprocessing params not used by model).
 _IGNORED_PARAMS = {
     "GCN": {"dropout", "use_edge_features"},
     "CGCNN": {"edge_features", "units"},
+    "DimeNetPP": {"output_activation"},
+    "rGIN": {"use_edge_features"},
 }
 
 

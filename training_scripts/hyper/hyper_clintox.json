@@ -19,14 +19,19 @@
         "early_stopping_patience": 50
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-4}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
         "loss": "bce_with_logits"
       },
       "scheduler": {
         "class_name": "ReduceLROnPlateau",
         "patience": 25,
         "factor": 0.5,
-        "min_lr": 1e-6
+        "min_lr": 1e-06
       },
       "cross_validation": {
         "n_splits": 5,
@@ -36,7 +41,9 @@
     "data": {
       "dataset": {
         "class_name": "ClinTox",
-        "config": {"root": "data/"}
+        "config": {
+          "root": "data/"
+        }
       },
       "data_unit": ""
     }
@@ -51,7 +58,10 @@
         "dropout": 0.05,
         "use_edge_features": false,
         "node_pooling": "sum",
-        "output_units": [64, 32],
+        "output_units": [
+          64,
+          32
+        ],
         "num_targets": 2
       }
     },
@@ -62,14 +72,19 @@
         "early_stopping_patience": 50
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
         "loss": "bce_with_logits"
       },
       "scheduler": {
         "class_name": "ReduceLROnPlateau",
         "patience": 25,
         "factor": 0.5,
-        "min_lr": 1e-6
+        "min_lr": 1e-06
       },
       "cross_validation": {
         "n_splits": 5,
@@ -79,7 +94,9 @@
     "data": {
       "dataset": {
         "class_name": "ClinTox",
-        "config": {"root": "data/"}
+        "config": {
+          "root": "data/"
+        }
       },
       "data_unit": ""
     }
@@ -94,7 +111,10 @@
         "attention_heads_num": 10,
         "attention_heads_concat": false,
         "node_pooling": "sum",
-        "output_units": [64, 32],
+        "output_units": [
+          64,
+          32
+        ],
         "num_targets": 2
       }
     },
@@ -105,14 +125,19 @@
         "early_stopping_patience": 50
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-3}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.005
+          }
+        },
         "loss": "bce_with_logits"
       },
       "scheduler": {
         "class_name": "ReduceLROnPlateau",
         "patience": 25,
         "factor": 0.5,
-        "min_lr": 1e-6
+        "min_lr": 1e-06
       },
       "cross_validation": {
         "n_splits": 5,
@@ -122,7 +147,9 @@
     "data": {
       "dataset": {
         "class_name": "ClinTox",
-        "config": {"root": "data/"}
+        "config": {
+          "root": "data/"
+        }
       },
       "data_unit": ""
     }
@@ -137,7 +164,10 @@
         "units": 128,
         "dropout": 0.1,
         "node_pooling": "sum",
-        "output_units": [64, 32],
+        "output_units": [
+          64,
+          32
+        ],
         "num_targets": 2
       }
     },
@@ -148,7 +178,12 @@
         "early_stopping_patience": 50
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
         "loss": "bce_with_logits"
       },
       "scheduler": {
@@ -165,7 +200,167 @@
     "data": {
       "dataset": {
         "class_name": "ClinTox",
-        "config": {"root": "data/"}
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": ""
+    }
+  },
+  "GraphSAGE": {
+    "model": {
+      "config": {
+        "model_name": "GraphSAGE",
+        "node_dim": 64,
+        "depth": 3,
+        "output_units": [
+          64,
+          32
+        ],
+        "num_targets": 1,
+        "output_activation": "sigmoid"
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 100,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
+        "loss": "bce_with_logits"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.0005,
+        "learning_rate_stop": 1e-05,
+        "epo_min": 400,
+        "epo": 500
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ClinTox",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": ""
+    }
+  },
+  "GATv2": {
+    "model": {
+      "config": {
+        "model_name": "GATv2",
+        "node_dim": 64,
+        "depth": 4,
+        "attention_units": 64,
+        "attention_heads_num": 10,
+        "attention_heads_concat": false,
+        "node_pooling": "sum",
+        "output_units": [
+          64,
+          32
+        ],
+        "num_targets": 1,
+        "output_activation": "sigmoid"
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 50,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
+        "loss": "bce_with_logits"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.0005,
+        "learning_rate_stop": 1e-05,
+        "epo_min": 250,
+        "epo": 500
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ClinTox",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": ""
+    }
+  },
+  "GCN": {
+    "model": {
+      "config": {
+        "model_name": "GCN",
+        "node_dim": 64,
+        "units": 140,
+        "depth": 5,
+        "output_units": [
+          140,
+          70
+        ],
+        "num_targets": 1,
+        "output_activation": "sigmoid"
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 50,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
+        "loss": "bce_with_logits"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.001,
+        "learning_rate_stop": 5e-05,
+        "epo_min": 250,
+        "epo": 800
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ClinTox",
+        "config": {
+          "root": "data/"
+        }
       },
       "data_unit": ""
     }

@@ -19,14 +19,19 @@
         "early_stopping_patience": 100
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-4}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
         "loss": "mae"
       },
       "scheduler": {
         "class_name": "ReduceLROnPlateau",
         "patience": 50,
         "factor": 0.5,
-        "min_lr": 1e-6
+        "min_lr": 1e-06
       },
       "scaler": {
         "class_name": "StandardLabelScaler"
@@ -62,14 +67,19 @@
         "early_stopping_patience": 100
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-4}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0001
+          }
+        },
         "loss": "mae"
       },
       "scheduler": {
         "class_name": "ReduceLROnPlateau",
         "patience": 50,
         "factor": 0.5,
-        "min_lr": 1e-6
+        "min_lr": 1e-06
       },
       "scaler": {
         "class_name": "StandardLabelScaler"
@@ -113,7 +123,12 @@
         "early_stopping_patience": 100
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
         "loss": "mae"
       },
       "scheduler": {
@@ -159,14 +174,67 @@
         "early_stopping_patience": 100
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
         "loss": "mae"
       },
       "scheduler": {
         "class_name": "ReduceLROnPlateau",
         "patience": 50,
         "factor": 0.5,
-        "min_lr": 1e-6
+        "min_lr": 1e-06
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "MatProjectEForm",
+        "config": {}
+      },
+      "data_unit": "eV/atom"
+    }
+  },
+  "Megnet": {
+    "model": {
+      "config": {
+        "model_name": "Megnet",
+        "node_dim": 64,
+        "depth": 3,
+        "set2set_channels": 16,
+        "output_dim": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 1000,
+        "batch_size": 32,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.0005,
+        "learning_rate_stop": 5e-06,
+        "epo_min": 100,
+        "epo": 1000
       },
       "scaler": {
         "class_name": "StandardLabelScaler"

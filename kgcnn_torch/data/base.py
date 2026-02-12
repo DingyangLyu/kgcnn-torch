@@ -363,6 +363,11 @@ class MemoryGraphList(list):
         import torch
         from torch_geometric.data import Data
 
+        # Auto-detect standard KGCNN edge attribute key when not explicitly specified
+        if edge_attr_keys is None and len(self) > 0:
+            if self[0].obtain_property('edge_attributes') is not None:
+                edge_attr_keys = ['edge_attributes']
+
         pyg_list = []
         for g in self:
             data_dict = {}
@@ -396,14 +401,24 @@ class MemoryGraphList(list):
             # Edge attributes
             if edge_attr_keys:
                 edge_attr_parts = []
+                _skip_edge_attr = False
                 for attr_key in edge_attr_keys:
                     val = g.obtain_property(attr_key)
                     if val is not None:
-                        t = torch.tensor(np.asarray(val), dtype=torch.float)
-                        if t.dim() == 1:
-                            t = t.unsqueeze(-1)
-                        edge_attr_parts.append(t)
-                if edge_attr_parts:
+                        val_arr = np.asarray(val, dtype=np.float32)
+                        if val_arr.size == 0:
+                            # 0 edges: cannot determine feature dim from empty
+                            # array, so skip edge_attr for this graph entirely.
+                            # A fixup pass after conversion will fill in the
+                            # correct empty shape (0, n_features).
+                            _skip_edge_attr = True
+                            break
+                        if val_arr.ndim == 1:
+                            # Scalar feature per edge, e.g. bond distance
+                            val_arr = val_arr.reshape(-1, 1)
+                        edge_attr_parts.append(
+                            torch.tensor(val_arr, dtype=torch.float))
+                if not _skip_edge_attr and edge_attr_parts:
                     data_dict['edge_attr'] = torch.cat(edge_attr_parts, dim=-1)
 
             # Edge weight (check both singular and plural naming)
@@ -417,10 +432,17 @@ class MemoryGraphList(list):
             labels = g.obtain_property(label_key)
             if labels is not None:
                 labels = np.atleast_1d(np.asarray(labels))
-                if labels.dtype.kind == 'i':
-                    data_dict['y'] = torch.tensor(labels, dtype=torch.long)
-                else:
-                    data_dict['y'] = torch.tensor(labels, dtype=torch.float)
+                # Handle object dtype (e.g. mixed types from CSV parsing)
+                if labels.dtype == np.object_:
+                    try:
+                        labels = labels.astype(np.float64)
+                    except (ValueError, TypeError):
+                        labels = None
+                if labels is not None:
+                    if labels.dtype.kind == 'i':
+                        data_dict['y'] = torch.tensor(labels, dtype=torch.long)
+                    else:
+                        data_dict['y'] = torch.tensor(labels, dtype=torch.float)
 
             # Force labels
             force = g.obtain_property("force")
@@ -526,6 +548,21 @@ class MemoryGraphList(list):
 
             pyg_data = Data(**data_dict)
             pyg_list.append(pyg_data)
+
+        # Fixup: ensure edge_attr has consistent feature dim across all graphs.
+        # Graphs with 0 edges may be missing edge_attr; fill with (0, n_feat).
+        if pyg_list:
+            ref_edge_dim = None
+            for d in pyg_list:
+                if hasattr(d, 'edge_attr') and d.edge_attr is not None and d.edge_attr.dim() == 2:
+                    ref_edge_dim = d.edge_attr.shape[1]
+                    break
+            if ref_edge_dim is not None:
+                for d in pyg_list:
+                    if not hasattr(d, 'edge_attr') or d.edge_attr is None:
+                        d.edge_attr = torch.zeros(0, ref_edge_dim, dtype=torch.float)
+                    elif d.edge_attr.dim() == 2 and d.edge_attr.shape[0] == 0 and d.edge_attr.shape[1] != ref_edge_dim:
+                        d.edge_attr = torch.zeros(0, ref_edge_dim, dtype=torch.float)
 
         return pyg_list
 

@@ -1,0 +1,14 @@
+sphinx
+sphinx_rtd_theme
+nbsphinx
+pandoc
+torch
+torch_geometric
+numpy
+scipy
+matplotlib
+pandas
+rdkit
+pymatgen
+ase
+ipython

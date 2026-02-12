@@ -91,7 +91,7 @@ def get_gpu_memory_info(device_id: int = 0) -> dict:
     if not torch.cuda.is_available():
         return {"total": 0, "allocated": 0, "cached": 0, "free": 0}
 
-    total = torch.cuda.get_device_properties(device_id).total_mem
+    total = torch.cuda.get_device_properties(device_id).total_memory
     allocated = torch.cuda.memory_allocated(device_id)
     cached = torch.cuda.memory_reserved(device_id)
     free = total - allocated

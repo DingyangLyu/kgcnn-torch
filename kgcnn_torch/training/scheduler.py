@@ -237,4 +237,5 @@ def get_scheduler(name: str, optimizer, **kwargs):
     if cls in (lr_scheduler.StepLR, lr_scheduler.ExponentialLR,
                lr_scheduler.CosineAnnealingLR, lr_scheduler.ReduceLROnPlateau):
         kwargs.pop("steps_per_epoch", None)
+        kwargs.pop("verbose", None)
     return cls(optimizer, **kwargs)

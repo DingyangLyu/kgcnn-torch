@@ -19,14 +19,19 @@
         "early_stopping_patience": 100
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-4}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
         "loss": "bce_with_logits"
       },
       "scheduler": {
         "class_name": "ReduceLROnPlateau",
         "patience": 50,
         "factor": 0.5,
-        "min_lr": 1e-6
+        "min_lr": 1e-06
       },
       "cross_validation": {
         "n_splits": 5,
@@ -59,14 +64,19 @@
         "early_stopping_patience": 100
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-4}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0001
+          }
+        },
         "loss": "bce_with_logits"
       },
       "scheduler": {
         "class_name": "ReduceLROnPlateau",
         "patience": 50,
         "factor": 0.5,
-        "min_lr": 1e-6
+        "min_lr": 1e-06
       },
       "cross_validation": {
         "n_splits": 5,
@@ -102,14 +112,119 @@
         "early_stopping_patience": 100
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
         "loss": "bce_with_logits"
       },
       "scheduler": {
         "class_name": "ReduceLROnPlateau",
         "patience": 50,
         "factor": 0.5,
-        "min_lr": 1e-6
+        "min_lr": 1e-06
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "MatProjectIsMetal",
+        "config": {}
+      },
+      "data_unit": ""
+    }
+  },
+  "Megnet": {
+    "model": {
+      "config": {
+        "model_name": "Megnet",
+        "node_dim": 64,
+        "depth": 3,
+        "set2set_channels": 16,
+        "output_dim": 1,
+        "output_activation": "sigmoid"
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 100,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
+        "loss": "bce_with_logits"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.0005,
+        "learning_rate_stop": 5e-06,
+        "epo_min": 100,
+        "epo": 100
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "MatProjectIsMetal",
+        "config": {}
+      },
+      "data_unit": ""
+    }
+  },
+  "DimeNetPP": {
+    "model": {
+      "config": {
+        "model_name": "DimeNetPP",
+        "emb_size": 128,
+        "out_emb_size": 256,
+        "int_emb_size": 64,
+        "basis_emb_size": 8,
+        "num_blocks": 4,
+        "num_spherical": 7,
+        "num_radial": 6,
+        "cutoff": 5.0,
+        "envelope_exponent": 5,
+        "num_before_skip": 1,
+        "num_after_skip": 2,
+        "num_dense_output": 3,
+        "output_dim": 1,
+        "output_activation": "sigmoid"
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 78,
+        "batch_size": 16,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
+        "loss": "bce_with_logits"
+      },
+      "scheduler": {
+        "class_name": "LinearWarmupExponentialDecay",
+        "warmup_steps": 3000,
+        "decay_steps": 4000000,
+        "decay_rate": 0.01
       },
       "cross_validation": {
         "n_splits": 5,

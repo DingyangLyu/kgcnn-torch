@@ -152,7 +152,10 @@ class SchNetModel(nn.Module):
             if hasattr(data, 'edge_image') and data.edge_image is not None:
                 pos_j = pos[edge_index[0]]
                 batch_edge = data.batch_edge if hasattr(data, 'batch_edge') else batch[edge_index[0]]
-                pos_j = shift_periodic_lattice(pos_j, data.edge_image, data.lattice, batch_edge)
+                lattice = data.lattice
+                if lattice.dim() == 2:
+                    lattice = lattice.reshape(-1, 3, 3)
+                pos_j = shift_periodic_lattice(pos_j, data.edge_image, lattice, batch_edge)
                 pos_i = pos[edge_index[1]]
                 diff = pos_j - pos_i
                 dist_sq = (diff * diff).sum(dim=-1, keepdim=True)
@@ -239,6 +242,9 @@ class SchNetCrystalModel(SchNetModel):
         # Edge features with periodic boundary conditions
         if self.make_distance:
             batch_edge = batch[edge_index[0]]
+            # PyG concatenates (3,3) lattice along dim 0 → (B*3, 3); reshape to (B, 3, 3)
+            if lattice.dim() == 2:
+                lattice = lattice.reshape(-1, 3, 3)
             pos_j = pos[edge_index[0]]
             pos_j = shift_periodic_lattice(pos_j, edge_image, lattice, batch_edge)
             pos_i = pos[edge_index[1]]

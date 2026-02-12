@@ -19,14 +19,19 @@
         "early_stopping_patience": 50
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 5e-4}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
         "loss": "mae"
       },
       "scheduler": {
         "class_name": "ReduceLROnPlateau",
         "patience": 25,
         "factor": 0.5,
-        "min_lr": 1e-6
+        "min_lr": 1e-06
       },
       "scaler": {
         "class_name": "StandardLabelScaler"
@@ -39,7 +44,9 @@
     "data": {
       "dataset": {
         "class_name": "ESOL",
-        "config": {"root": "data/"}
+        "config": {
+          "root": "data/"
+        }
       },
       "data_unit": "log mol/L"
     }
@@ -54,7 +61,10 @@
         "dropout": 0.0,
         "use_edge_features": false,
         "node_pooling": "sum",
-        "output_units": [128, 64],
+        "output_units": [
+          128,
+          64
+        ],
         "num_targets": 1
       }
     },
@@ -65,14 +75,19 @@
         "early_stopping_patience": 50
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
         "loss": "mae"
       },
       "scheduler": {
         "class_name": "ReduceLROnPlateau",
         "patience": 25,
         "factor": 0.5,
-        "min_lr": 1e-6
+        "min_lr": 1e-06
       },
       "scaler": {
         "class_name": "StandardLabelScaler"
@@ -85,7 +100,9 @@
     "data": {
       "dataset": {
         "class_name": "ESOL",
-        "config": {"root": "data/"}
+        "config": {
+          "root": "data/"
+        }
       },
       "data_unit": "log mol/L"
     }
@@ -100,7 +117,10 @@
         "attention_heads_num": 4,
         "attention_heads_concat": true,
         "node_pooling": "sum",
-        "output_units": [128, 64],
+        "output_units": [
+          128,
+          64
+        ],
         "num_targets": 1
       }
     },
@@ -111,14 +131,19 @@
         "early_stopping_patience": 50
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
         "loss": "mae"
       },
       "scheduler": {
         "class_name": "ReduceLROnPlateau",
         "patience": 25,
         "factor": 0.5,
-        "min_lr": 1e-6
+        "min_lr": 1e-06
       },
       "scaler": {
         "class_name": "StandardLabelScaler"
@@ -131,7 +156,9 @@
     "data": {
       "dataset": {
         "class_name": "ESOL",
-        "config": {"root": "data/"}
+        "config": {
+          "root": "data/"
+        }
       },
       "data_unit": "log mol/L"
     }
@@ -146,7 +173,10 @@
         "units": 300,
         "dropout": 0.0,
         "node_pooling": "sum",
-        "output_units": [300, 150],
+        "output_units": [
+          300,
+          150
+        ],
         "num_targets": 1
       }
     },
@@ -157,7 +187,12 @@
         "early_stopping_patience": 50
       },
       "compile": {
-        "optimizer": {"class_name": "Adam", "config": {"lr": 1e-3}},
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
         "loss": "mae"
       },
       "scheduler": {
@@ -177,7 +212,1147 @@
     "data": {
       "dataset": {
         "class_name": "ESOL",
-        "config": {"root": "data/"}
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "GCN": {
+    "model": {
+      "config": {
+        "model_name": "GCN",
+        "node_dim": 64,
+        "units": 140,
+        "depth": 5,
+        "output_units": [
+          140,
+          70
+        ],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 800,
+        "batch_size": 32,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.001,
+        "learning_rate_stop": 5e-05,
+        "epo_min": 250,
+        "epo": 800
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "GATv2": {
+    "model": {
+      "config": {
+        "model_name": "GATv2",
+        "node_dim": 64,
+        "depth": 4,
+        "attention_units": 64,
+        "attention_heads_num": 10,
+        "attention_heads_concat": false,
+        "node_pooling": "sum",
+        "output_units": [
+          64,
+          32
+        ],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 500,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.0005,
+        "learning_rate_stop": 1e-05,
+        "epo_min": 250,
+        "epo": 500
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "GraphSAGE": {
+    "model": {
+      "config": {
+        "model_name": "GraphSAGE",
+        "node_dim": 64,
+        "depth": 3,
+        "output_units": [
+          64,
+          32
+        ],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 500,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.0005,
+        "learning_rate_stop": 1e-05,
+        "epo_min": 400,
+        "epo": 500
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "PAiNN": {
+    "model": {
+      "config": {
+        "model_name": "PAiNN",
+        "num_features": 128,
+        "num_interactions": 3,
+        "cutoff": 5.0,
+        "num_gaussians": 20,
+        "output_dim": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 250,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearWarmupExponentialDecay",
+        "warmup_steps": 30,
+        "decay_steps": 40000,
+        "decay_rate": 0.01
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "AttentiveFP": {
+    "model": {
+      "config": {
+        "model_name": "AttentiveFP",
+        "node_dim": 64,
+        "units": 200,
+        "depthato": 2,
+        "depthmol": 3,
+        "dropout": 0.2,
+        "output_units": [
+          200
+        ],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 200,
+        "batch_size": 200,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "AdamW",
+          "config": {
+            "lr": 0.0031622776601683794,
+            "weight_decay": 1e-05
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 25,
+        "factor": 0.5,
+        "min_lr": 1e-06
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "NMPN": {
+    "model": {
+      "config": {
+        "model_name": "NMPN",
+        "node_dim": 128,
+        "depth": 3,
+        "use_set2set": true,
+        "set2set_channels": 64,
+        "output_units": [
+          64,
+          32
+        ],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 800,
+        "batch_size": 32,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.001,
+        "learning_rate_stop": 5e-05,
+        "epo_min": 100,
+        "epo": 800
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "DGIN": {
+    "model": {
+      "config": {
+        "model_name": "DGIN",
+        "node_dim": 64,
+        "depth_dmpnn": 5,
+        "depth_gin": 5,
+        "units": 100,
+        "dropout_dmpnn": 0.05,
+        "dropout_gin": 0.05,
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 300,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearWarmupExponentialDecay",
+        "warmup_steps": 200,
+        "decay_steps": 1600,
+        "decay_rate": 0.5
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "DimeNetPP": {
+    "model": {
+      "config": {
+        "model_name": "DimeNetPP",
+        "emb_size": 128,
+        "out_emb_size": 256,
+        "int_emb_size": 64,
+        "basis_emb_size": 8,
+        "num_blocks": 4,
+        "num_spherical": 7,
+        "num_radial": 6,
+        "cutoff": 5.0,
+        "envelope_exponent": 5,
+        "num_before_skip": 1,
+        "num_after_skip": 2,
+        "num_dense_output": 3,
+        "output_dim": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 872,
+        "batch_size": 10,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearWarmupExponentialDecay",
+        "warmup_steps": 30,
+        "decay_steps": 40000,
+        "decay_rate": 0.01
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "EGNN": {
+    "model": {
+      "config": {
+        "model_name": "EGNN",
+        "num_features": 64,
+        "num_interactions": 4,
+        "output_dim": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 800,
+        "batch_size": 64,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.0005,
+        "learning_rate_stop": 1e-05,
+        "epo_min": 100,
+        "epo": 800
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "GNNFilm": {
+    "model": {
+      "config": {
+        "model_name": "GNNFilm",
+        "node_dim": 64,
+        "units": 64,
+        "depth": 5,
+        "num_relations": 20,
+        "output_units": [
+          140,
+          70
+        ],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 800,
+        "batch_size": 32,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.001,
+        "learning_rate_stop": 5e-05,
+        "epo_min": 250,
+        "epo": 800
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "HamNet": {
+    "model": {
+      "config": {
+        "model_name": "HamNet",
+        "node_dim": 64,
+        "units": 200,
+        "depth": 3,
+        "fingerprint_dim": 200,
+        "fingerprint_depth": 3,
+        "output_units": [
+          200
+        ],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 400,
+        "batch_size": 40,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "AdamW",
+          "config": {
+            "lr": 0.001,
+            "weight_decay": 1e-05
+          }
+        },
+        "loss": "mse"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 25,
+        "factor": 0.5,
+        "min_lr": 1e-06
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "Megnet": {
+    "model": {
+      "config": {
+        "model_name": "Megnet",
+        "node_dim": 16,
+        "depth": 3,
+        "set2set_channels": 16,
+        "output_dim": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 800,
+        "batch_size": 32,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.0005,
+        "learning_rate_stop": 1e-05,
+        "epo_min": 100,
+        "epo": 800
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "RGCN": {
+    "model": {
+      "config": {
+        "model_name": "RGCN",
+        "node_dim": 64,
+        "units": 64,
+        "depth": 5,
+        "num_relations": 20,
+        "output_units": [
+          140,
+          70
+        ],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 800,
+        "batch_size": 32,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.001,
+        "learning_rate_stop": 5e-05,
+        "epo_min": 250,
+        "epo": 800
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "HDNNP2nd": {
+    "model": {
+      "config": {
+        "model_name": "HDNNP2nd",
+        "relational_units": [
+          128,
+          128,
+          128
+        ],
+        "num_relations": 96,
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 500,
+        "batch_size": 64,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.001,
+        "learning_rate_stop": 1e-05,
+        "epo_min": 100,
+        "epo": 500
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "MoGAT": {
+    "model": {
+      "config": {
+        "model_name": "MoGAT",
+        "node_dim": 64,
+        "units": 100,
+        "depthato": 2,
+        "depthmol": 2,
+        "dropout": 0.2,
+        "output_units": [],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 200,
+        "batch_size": 200,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "AdamW",
+          "config": {
+            "lr": 0.001,
+            "weight_decay": 1e-05
+          }
+        },
+        "loss": "mse"
+      },
+      "scheduler": {
+        "class_name": "ReduceLROnPlateau",
+        "patience": 25,
+        "factor": 0.5,
+        "min_lr": 1e-06
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "INorp": {
+    "model": {
+      "config": {
+        "model_name": "INorp",
+        "node_dim": 32,
+        "depth": 3,
+        "output_units": [
+          32,
+          32
+        ],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 500,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.0005,
+        "learning_rate_stop": 1e-05,
+        "epo_min": 300,
+        "epo": 500
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "MEGAN": {
+    "model": {
+      "config": {
+        "model_name": "MEGAN",
+        "units": [
+          60,
+          50,
+          40,
+          30
+        ],
+        "importance_units": [],
+        "final_units": [
+          50,
+          30,
+          10,
+          1
+        ],
+        "dropout_rate": 0.3,
+        "importance_channels": 3,
+        "num_heads": 3,
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 400,
+        "batch_size": 64,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
+        "loss": "mse"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.001,
+        "learning_rate_stop": 1e-05,
+        "epo_min": 200,
+        "epo": 400
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "rGIN": {
+    "model": {
+      "config": {
+        "model_name": "rGIN",
+        "node_dim": 95,
+        "depth": 5,
+        "units": 64,
+        "dropout": 0.05,
+        "use_edge_features": false,
+        "node_pooling": "sum",
+        "output_units": [
+          64,
+          32
+        ],
+        "num_targets": 1,
+        "random_range": 100
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 300,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearWarmupExponentialDecay",
+        "warmup_steps": 200,
+        "decay_steps": 1600,
+        "decay_rate": 0.5
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "MXMNet": {
+    "model": {
+      "config": {
+        "model_name": "MXMNet",
+        "node_dim": 32,
+        "depth": 4,
+        "num_radial": 16,
+        "num_spherical": 7,
+        "cutoff": 5.0,
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 900,
+        "batch_size": 128,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearWarmupExponentialDecay",
+        "lr_start": 0.001,
+        "gamma": 0.9961697,
+        "epo_warmup": 1
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "MAT": {
+    "model": {
+      "config": {
+        "model_name": "MAT",
+        "embedding_units": 32,
+        "depth": 5,
+        "num_heads": 8,
+        "attention_units": 8,
+        "merge_heads": "concat",
+        "attention_dropout": 0.1,
+        "output_units": [
+          32,
+          16
+        ],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 400,
+        "batch_size": 32,
+        "early_stopping_patience": 50
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.0005
+          }
+        },
+        "loss": "mae"
+      },
+      "scheduler": {
+        "class_name": "LinearLearningRateScheduler",
+        "learning_rate_start": 0.0005,
+        "learning_rate_stop": 1e-05,
+        "epo_min": 0,
+        "epo": 400
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
+      },
+      "data_unit": "log mol/L"
+    }
+  },
+  "CMPNN": {
+    "model": {
+      "config": {
+        "model_name": "CMPNN",
+        "node_dim": 64,
+        "depth": 5,
+        "units": 300,
+        "use_final_gru": true,
+        "output_units": [
+          300
+        ],
+        "num_targets": 1
+      }
+    },
+    "training": {
+      "fit": {
+        "epochs": 600,
+        "batch_size": 50,
+        "early_stopping_patience": 100
+      },
+      "compile": {
+        "optimizer": {
+          "class_name": "Adam",
+          "config": {
+            "lr": 0.001
+          }
+        },
+        "loss": "mse"
+      },
+      "scheduler": {
+        "class_name": "LinearWarmupExponentialDecay",
+        "warmup_steps": 200,
+        "decay_steps": 1600,
+        "decay_rate": 0.5
+      },
+      "scaler": {
+        "class_name": "StandardLabelScaler"
+      },
+      "cross_validation": {
+        "n_splits": 5,
+        "shuffle": true
+      }
+    },
+    "data": {
+      "dataset": {
+        "class_name": "ESOL",
+        "config": {
+          "root": "data/"
+        }
       },
       "data_unit": "log mol/L"
     }
