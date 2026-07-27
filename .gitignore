@@ -1,33 +1,60 @@
-# Data directories
+# Python environments and build artifacts
+.venv/
+venv/
+env/
+.env/
+*.egg-info/
+build/
+dist/
+__pycache__/
+*.py[cod]
+*.so
+
+# Test, type-check, and notebook caches
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Local configuration and IDE files
+.env.local
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+
+# Downloaded or generated datasets
 /data/
 /datasets/
-
-# Large dataset / pickle files
-MatPES-PBE-2025.1.json
-*.pkl
+/kgcnn_datasets/
 *.kgcnn.pickle
-
-# PyG processed data
 *_pyg.pt
 pre_filter.pt
 pre_transform.pt
+MatPES-PBE-2025.1.json
 
-# Temporary training outputs
+# Training artifacts, checkpoints, logs, and experiment tracking
+results/
+runs/
+outputs/
+checkpoints/
+logs/
+lightning_logs/
+wandb/
+mlruns/
+tensorboard/
+*.ckpt
+*.pth
+*.pt
+*.onnx
+*.log
+
+# Project-local scratch files
 tmp_matpes_2k/
 tmp_train_all_models/
 tmp_train_check/
 _train_worker.py
-
-# Python build artifacts
-*.egg-info/
-__pycache__/
-*.pyc
-*.pyo
-dist/
-build/
-
-# IDE / OS
-.idea/
-.vscode/
-*.swp
-.DS_Store
