@@ -28,6 +28,194 @@ EGNN, HamNet, AttentiveFP, MAT, MEGAN, MoGAT, CGCNN, MEGNet, HDNNP2nd,
 MXMNet, GNNFiLM, and GNNExplainer utilities. Some architectures also provide
 crystal-aware variants.
 
+### Conventional graph networks
+
+| Model | Class | Notes |
+| --- | --- | --- |
+| GCN | `GCNModel` | Graph convolution for integer or floating-point node features. |
+| GAT / GATv2 | `GATModel`, `GATv2Model` | Multi-head graph attention with optional edge features. |
+| GIN / rGIN | `GINModel`, `rGINModel` | Graph-isomorphism networks; rGIN adds residual connections. |
+| GraphSAGE | `GraphSAGEModel` | Inductive, sampling-oriented graph representation learning. |
+| RGCN | `RGCNModel` | Relation-aware graph convolution. |
+
+### Message passing and geometric models
+
+| Model | Class | Notes |
+| --- | --- | --- |
+| SchNet | `SchNetModel` | Continuous-filter convolution with Gaussian distance expansion. |
+| DimeNet++ | `DimeNetPPModel` | Directional message passing with radial and spherical basis functions. |
+| PAiNN | `PAiNNModel` | Equivariant scalar and vector message passing. |
+| EGNN | `EGNNModel` | E(n)-equivariant graph network. |
+| DMPNN / CMPNN | `DMPNNModel`, `CMPNNModel` | Directed and communicative message passing for molecular prediction. |
+| NMPN / DGIN / INorp | `NMPNModel`, `DGINModel`, `INorpModel` | Neural message passing and interaction-network variants. |
+| HamNet / HDNNP2nd | `HamNetModel`, `HDNNP2ndModel` | Hamiltonian and high-dimensional neural-network-potential variants. |
+
+### Attention, materials, and other architectures
+
+| Model family | Class | Notes |
+| --- | --- | --- |
+| AttentiveFP / MAT / MEGAN / MoGAT | corresponding `*Model` classes | Molecular fingerprinting and attention-based graph models. |
+| CGCNN / MEGNet | `CGCNNModel`, `MEGNetModel` | Crystal and materials-property prediction. |
+| SchNetCrystal | `SchNetCrystalModel` | SchNet variant with periodic-boundary-condition support. |
+| MXMNet | `MXMNetModel` | Molecular mechanics-inspired multiplex graph network. |
+| GNNFiLM / GNNExplain | `GNNFilmModel`, `GNNExplainModel` | Feature-wise modulation and explanation utilities. |
+
+## Layer system
+
+All layers live in [`kgcnn_torch/layers`](kgcnn_torch/layers) and use the PyG
+edge convention: `edge_index[0]` is the source node and `edge_index[1]` is the
+target node.
+
+### Geometry and basis functions
+
+`layers/geom.py` contains the geometric building blocks used by molecular and
+crystal models:
+
+| Layer or function | Purpose |
+| --- | --- |
+| `compute_edge_distances(pos, edge_index)` | Euclidean distance for each edge. |
+| `compute_edge_direction_normalized(pos, edge_index)` | Normalized edge direction vectors. |
+| `shift_periodic_lattice(...)` | Coordinates shifted under periodic boundary conditions. |
+| `GaussBasisLayer` | Gaussian basis expansion used by SchNet. |
+| `BesselBasisLayer` | Radial Bessel basis with trainable frequency parameters. |
+| `SphericalBasisLayer` | Combined radial Bessel and spherical-harmonic basis for DimeNet++. |
+| `CosCutOffEnvelope` | Cosine cutoff envelope for finite interaction radii. |
+
+### Convolutions, attention, aggregation, and pooling
+
+| Area | Available components |
+| --- | --- |
+| Convolutions | `GCNConv`, `SchNetCFconv`, `SchNetInteraction`, `GINConv`, `GINEConv`, `CGCNNLayer` |
+| Attention | `AttentionHeadGAT`, `AttentionHeadGATV2`, `MultiHeadGATV2Layer` |
+| Edge aggregation | `Aggregate`, `AggregateLocalEdges`, `AggregateLocalEdgesAttention`, `AggregateLocalEdgesLSTM`, `RelationalAggregateLocalEdges` |
+| Graph pooling | `PoolingNodes`, `PoolingWeightedNodes`, `PoolingEmbeddingAttention`, `PoolingNodesAttentive` |
+
+Aggregation supports common reduction modes such as sum, mean, max, and min.
+The attentive pooling implementation includes the iterative GRU-and-attention
+refinement used by AttentiveFP.
+
+### MLPs, normalization, and utilities
+
+`MLP` supports per-layer widths and activations, optional dropout, and batch,
+layer, graph, group, or unit normalization. Graph-aware normalization is
+provided by `GraphBatchNorm`, `GraphLayerNorm`, and `GraphNormalization`.
+
+Other useful components include `gather_nodes_outgoing`, `gather_nodes_ingoing`,
+`GRUUpdate`, `ResidualLayer`, `StandardLabelScaler`, and
+`ExtensiveMolecularLabelScaler`. Low-level scatter reductions and activations
+are available under [`kgcnn_torch/ops`](kgcnn_torch/ops), including
+`scatter_reduce_sum`, `scatter_reduce_mean`, `scatter_reduce_max`,
+`scatter_reduce_min`, and `scatter_reduce_softmax`.
+
+## Training system
+
+The training module provides a framework-independent PyTorch training loop in
+[`kgcnn_torch/training`](kgcnn_torch/training):
+
+| Function | Purpose |
+| --- | --- |
+| `train_epoch` | Trains one epoch; supports scalar and dictionary outputs. |
+| `eval_epoch` | Evaluates a loader with optional metrics and inverse scaling. |
+| `fit` | Full loop with callbacks, schedulers, checkpoints, and early stopping. |
+
+```python
+from kgcnn_torch.training.trainer import fit
+
+history = fit(
+    model=model,
+    train_loader=train_loader,
+    val_loader=val_loader,
+    optimizer=optimizer,
+    loss_fn=loss_fn,
+    epochs=500,
+    metrics={"mae": mae, "rmse": rmse},
+    scheduler=scheduler,
+    callbacks=[early_stopping, checkpoint],
+    device="cuda",
+    scaler=scaler,
+)
+```
+
+### Callbacks and schedulers
+
+`EarlyStoppingCallback`, `ModelCheckpointCallback`, and
+`LearningRateLoggingCallback` provide the standard training lifecycle hooks.
+The scheduler factory supports linear warm-up, warm-up plus exponential or
+cosine decay, polynomial decay, linear decay, `ReduceLROnPlateau`, `StepLR`,
+`ExponentialLR`, and `CosineAnnealingLR`.
+
+### Losses, metrics, and scaling
+
+- `EnergyForceLoss` combines energy and force objectives.
+- `ForceMeanAbsoluteError` and `DisjointForceMeanAbsoluteError` evaluate forces
+  while handling molecule-wise normalization or disjoint graphs.
+- `BinaryCrossentropyNoNaN`, `BinaryAccuracyNoNaN`,
+  `BalancedBinaryAccuracyNoNaN`, and `AUCNoNaN` handle datasets with missing
+  labels.
+- Regression metrics include MAE, MSE, RMSE, and scaled MAE/RMSE variants.
+- `StandardLabelScaler` applies standard scaling; `ExtensiveMolecularLabelScaler`
+  learns element reference energies with ridge regression for extensive targets.
+
+## Hyperparameter configurations
+
+JSON configurations are loaded by `HyperParameter` from
+[`kgcnn_torch/training/hyper.py`](kgcnn_torch/training/hyper.py). A file can
+store multiple model configurations keyed by model name:
+
+```json
+{
+  "SchNet": {
+    "model": {
+      "config": {
+        "num_features": 128,
+        "num_filters": 128,
+        "num_interactions": 6,
+        "cutoff": 10.0,
+        "num_gaussians": 50,
+        "output_dim": 1
+      }
+    },
+    "training": {
+      "fit": {"epochs": 500, "batch_size": 32},
+      "compile": {"optimizer": {"class_name": "Adam", "config": {"lr": 0.0005}}, "loss": "mae"},
+      "cross_validation": {"n_splits": 5, "shuffle": true}
+    }
+  }
+}
+```
+
+The [`training_scripts/hyper`](training_scripts/hyper) directory contains
+ready-to-run configurations for ESOL, FreeSolv, Lipophilicity, QM7/QM9,
+MUTAG, Mutagenicity, PROTEINS, ClinTox, SIDER, Tox21, Cora, MD17, ISO17,
+MatBench, and Materials Project tasks.
+
+For `GNNFilm` and `RGCN`, `output_final_activation` defaults to `"linear"` to
+work naturally with logits-based losses such as `BCEWithLogitsLoss` and
+`CrossEntropyLoss`. Set it explicitly to `"softmax"` when reproducing a
+configuration that expects probability outputs.
+
+## Data pipeline
+
+PyG `Data` is the standard graph representation. The dataset pipeline can
+convert `MemoryGraphList`-style kgcnn data into PyG objects.
+
+| Source kgcnn attribute | PyG attribute | Meaning |
+| --- | --- | --- |
+| `node_number` | `z` | Atomic numbers, shape `(N,)`. |
+| `node_coordinates` | `pos` | Cartesian coordinates, shape `(N, 3)`. |
+| `edge_indices` | `edge_index` | Edges, shape `(2, M)`. |
+| `graph_labels` | `y` | Graph-level labels. |
+| `graph_lattice` | `lattice` | Lattice matrices, shape `(B, 3, 3)`. |
+| `range_image` | `edge_image` | Periodic image offsets, shape `(M, 3)`. |
+| `angle_indices` | `angle_index` | Angle triplets for DimeNet++. |
+
+> **Edge-order note:** the original kgcnn convention is `[target, source]`,
+> while PyG uses `[source, target]`. `to_pyg_list()` performs this conversion.
+
+The `graph`, `molecule`, `crystal`, and `io` modules cover generic graph
+preprocessing, RDKit/Open Babel molecule processing, periodic crystal graph
+construction, and data I/O respectively.
+
 ## Installation
 
 Python 3.9 or later is required. Install a PyTorch build appropriate for your
